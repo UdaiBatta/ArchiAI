@@ -13,6 +13,11 @@ Implemented in this iteration:
 - Optional Vastu preference evaluation with explicit priority ordering
 - Explanation builder combining bylaw checks, knowledge references, and trade-offs
 - API integration through a single orchestrated planning pipeline
+- Clarification-aware API contract with missing-field questions
+- Strict clarification gate that defers generation when critical fields are missing
+- Layout quality scoring with adjacency and circulation metrics
+- Deterministic geometry validation checks before export
+- Optional Hypar API submission hook (config driven)
 
 ## Step 1 - Input Understanding
 
@@ -97,10 +102,8 @@ What it does:
 
 ## Next Implementation Steps
 
-1. Add clarification-question loop for missing critical data (plot dimensions, region confidence)
-2. Add region and building-type scoped knowledge metadata files for higher retrieval precision
-3. Add room adjacency graph constraints and circulation quality scoring
-4. Add deterministic geometry validity checks (overlaps, min clearances)
-5. Add direct Hypar API submission mode (in addition to JSON artifact output)
-6. Add API tests for POST /api/v1/design/ covering Vastu and region scenarios
-7. Add explainability schema versioning for stable downstream UI rendering
+1. Add region and building-type scoped knowledge metadata files for higher retrieval precision
+2. Expand layout feasibility checks with corridor width, stair core continuity, and service shaft constraints
+3. Add explainability schema versioning as a structured API object (not just text)
+4. Add direct Hypar API integration test harness with mocked endpoint
+5. Prepare dataset ingestion and scraping pipeline (deferred per current scope)

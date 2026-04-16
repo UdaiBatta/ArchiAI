@@ -11,9 +11,12 @@ def build_explanation(
     retrieved_knowledge: List[dict],
     vastu_report: Dict[str, object],
     layout_notes: List[str],
+    geometry_validation: Dict[str, object] | None = None,
+    hypar_submission: Dict[str, object] | None = None,
 ) -> str:
     lines: List[str] = []
 
+    lines.append("Explainability schema: archi3d.explanation.v1")
     lines.append("Design explanation summary")
     lines.append(
         f"Region: {compliance_report.get('region_name', parsed_input.get('region', 'default'))}; "
@@ -52,5 +55,21 @@ def build_explanation(
         lines.append("Trade-offs and modifications:")
         for note in tradeoffs:
             lines.append(f"- {note}")
+
+    if geometry_validation is not None:
+        lines.append(
+            "Geometry validation: "
+            + ("passed" if geometry_validation.get("valid") else "failed")
+        )
+        for check in geometry_validation.get("checks", []):
+            status = "PASS" if check.get("passed") else "FAIL"
+            lines.append(f"- Geometry {status}: {check.get('name')} -> {check.get('message')}")
+
+    if hypar_submission is not None:
+        if hypar_submission.get("submitted"):
+            lines.append("Hypar submission: submitted successfully.")
+        else:
+            reason = hypar_submission.get("reason", "unknown")
+            lines.append(f"Hypar submission: skipped/failed ({reason}).")
 
     return "\n".join(lines)

@@ -25,7 +25,9 @@ def test_design_api_surfaces_clarification_for_sparse_request(tmp_path, settings
     assert len(payload["missing_fields"]) >= 1
     assert isinstance(payload["clarification_questions"], list)
     assert len(payload["clarification_questions"]) >= 1
-    assert payload["status"] == "compliance_checked"
+    assert payload["status"] == "received"
+    assert payload["layout_zones"] == []
+    assert payload["hypar_json_path"] == ""
 
 
 @pytest.mark.integration

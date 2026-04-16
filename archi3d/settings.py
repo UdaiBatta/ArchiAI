@@ -34,6 +34,8 @@ env = environ.Env(
     OLLAMA_HOST=(str, "http://localhost:11434"),
     OLLAMA_MODEL=(str, "llama3.2"),
     RAG_TOP_K=(int, 5),
+    HYPAR_API_URL=(str, ""),
+    HYPAR_API_TOKEN=(str, ""),
 )
 
 # Read the .env file (if it exists — falls back to env variables)
@@ -154,4 +156,6 @@ ARCHI3D = {
     "OLLAMA_HOST": env("OLLAMA_HOST"),
     "OLLAMA_MODEL": env("OLLAMA_MODEL"),
     "RAG_TOP_K": env("RAG_TOP_K"),
+    "HYPAR_API_URL": env("HYPAR_API_URL"),
+    "HYPAR_API_TOKEN": env("HYPAR_API_TOKEN"),
 }
