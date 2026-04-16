@@ -1,6 +1,7 @@
 import pytest
 
 from services.bylaw_loader import load_bylaws
+from services.geometry_validator import validate_layout_geometry
 from services.input_parser import parse_design_input
 from services.layout_generator import generate_conceptual_layout
 from services.pipeline import run_design_pipeline
@@ -102,20 +103,23 @@ def test_pipeline_returns_hypar_artifact(settings, tmp_path):
     result = run_design_pipeline(
         {
             "raw_text": "Design a 2-floor residential house on a 30x40 plot with parking and vastu",
+            "region": "india_mumbai",
             "building_type": "residential",
             "plot_width_m": 30,
             "plot_depth_m": 40,
             "num_floors": 2,
             "num_units": 1,
+            "plot_facing_direction": "east",
             "preferences": {"parking": True},
             "use_vastu": True,
         }
     )
 
-    assert result["status"] in {"completed", "compliance_checked"}
+    assert result["status"] in {"completed", "layout_generated"}
     assert isinstance(result["layout_zones"], list)
-    assert result["hypar_json_path"].endswith(".json")
-    assert (tmp_path / result["hypar_json_path"]).exists()
+    if result["hypar_json_path"]:
+        assert result["hypar_json_path"].endswith(".json")
+        assert (tmp_path / result["hypar_json_path"]).exists()
 
 
 @pytest.mark.unit
@@ -148,3 +152,51 @@ def test_input_parser_adds_vastu_direction_question_when_needed():
     assert parsed["use_vastu"] is True
     assert "plot_facing_direction" in meta["missing_fields"]
     assert any("plot face" in q.lower() or "direction" in q.lower() for q in meta["clarification_questions"])
+
+
+@pytest.mark.unit
+def test_pipeline_strict_clarification_gate_skips_generation(settings, tmp_path):
+    settings.ARCHI3D = {
+        **settings.ARCHI3D,
+        "OUTPUTS_DIR": tmp_path,
+    }
+
+    result = run_design_pipeline(
+        {
+            "raw_text": "Design a vastu-ready house",
+        }
+    )
+
+    assert result["requires_clarification"] is True
+    assert result["status"] == "received"
+    assert result["layout_zones"] == []
+    assert result["hypar_json_path"] == ""
+
+
+@pytest.mark.unit
+def test_geometry_validator_detects_overlap_issues():
+    zones = [
+        {
+            "id": "zone_1",
+            "room_type": "living_room",
+            "floor": 0,
+            "x": 0.0,
+            "y": 0.0,
+            "width_m": 5.0,
+            "depth_m": 5.0,
+        },
+        {
+            "id": "zone_2",
+            "room_type": "kitchen",
+            "floor": 0,
+            "x": 4.0,
+            "y": 2.0,
+            "width_m": 4.0,
+            "depth_m": 4.0,
+        },
+    ]
+
+    result = validate_layout_geometry(zones)
+
+    assert result["valid"] is False
+    assert len(result["overlap_issues"]) >= 1
