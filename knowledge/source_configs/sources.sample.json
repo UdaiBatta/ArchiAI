@@ -1,0 +1,43 @@
+[
+  {
+    "name": "wikipedia_architecture",
+    "start_urls": [
+      "https://en.wikipedia.org/wiki/Architectural_plan"
+    ],
+    "allowed_domains": [
+      "wikipedia.org"
+    ],
+    "max_pages": 10,
+    "allowed_licenses": [
+      "cc-by-sa"
+    ],
+    "deny_path_keywords": [
+      "special:",
+      "login",
+      "privacy",
+      "terms"
+    ]
+  },
+  {
+    "name": "open_building_examples",
+    "start_urls": [
+      "https://commons.wikimedia.org/wiki/Category:Architectural_drawings"
+    ],
+    "allowed_domains": [
+      "commons.wikimedia.org",
+      "wikimedia.org"
+    ],
+    "max_pages": 10,
+    "allowed_licenses": [
+      "cc-by",
+      "cc-by-sa",
+      "public-domain"
+    ],
+    "deny_path_keywords": [
+      "special:",
+      "talk:",
+      "privacy",
+      "terms"
+    ]
+  }
+]

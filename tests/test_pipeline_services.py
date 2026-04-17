@@ -1,4 +1,5 @@
 import pytest
+import json
 
 from services.bylaw_loader import load_bylaws
 from services.geometry_validator import validate_layout_geometry
@@ -21,6 +22,94 @@ def test_vectorless_retriever_returns_chunks(tmp_path):
     assert len(results) == 3
     assert all("title" in item for item in results)
     assert all("score" in item for item in results)
+    assert all("section_id" in item for item in results)
+    assert all("doc_id" in item for item in results)
+
+
+@pytest.mark.unit
+def test_vectorless_retriever_respects_region_and_building_scope(tmp_path):
+    knowledge_file = tmp_path / "scoped_chunks.json"
+    knowledge_file.write_text(
+        json.dumps(
+            {
+                "doc_id": "arch_casebook",
+                "chunks": [
+                    {
+                        "id": "mumbai_res_rule",
+                        "title": "Mumbai residential FAR",
+                        "text": "Mumbai residential FAR clause with setback compliance guidance.",
+                        "region_id": "india_mumbai",
+                        "building_type": "residential",
+                        "tags": ["far", "setback"],
+                        "entities": ["far", "setback", "residential"],
+                        "section_path": ["Rules", "Mumbai", "Residential"],
+                        "page_no": 12,
+                    },
+                    {
+                        "id": "nyc_res_rule",
+                        "title": "NYC residential FAR",
+                        "text": "NYC low density FAR clause.",
+                        "region_id": "usa_nyc",
+                        "building_type": "residential",
+                        "tags": ["far"],
+                        "section_path": ["Rules", "NYC", "Residential"],
+                    },
+                    {
+                        "id": "mumbai_commercial_rule",
+                        "title": "Mumbai commercial FAR",
+                        "text": "Commercial FAR and parking guidance.",
+                        "region_id": "india_mumbai",
+                        "building_type": "commercial",
+                        "tags": ["far", "parking"],
+                        "section_path": ["Rules", "Mumbai", "Commercial"],
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=tmp_path)
+    results = retriever.retrieve(
+        query="mumbai residential far setback",
+        region_id="india_mumbai",
+        building_type="residential",
+        top_k=5,
+    )
+
+    assert len(results) >= 1
+    assert all(item["region_id"] in {"all", "india_mumbai"} for item in results)
+    assert all(item["building_type"] in {"all", "residential"} for item in results)
+    assert results[0]["id"] == "mumbai_res_rule"
+
+
+@pytest.mark.unit
+def test_vectorless_retriever_includes_markdown_section_metadata(tmp_path):
+    md = tmp_path / "arch_doc.md"
+    md.write_text(
+        """
+# Residential Planning
+## Kitchen and Dining
+Keep kitchen adjacent to dining with ventilation.
+
+## Stair Placement
+Use central stair for efficient circulation.
+""".strip(),
+        encoding="utf-8",
+    )
+
+    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=tmp_path)
+    results = retriever.retrieve(
+        query="kitchen dining ventilation",
+        region_id="india_mumbai",
+        building_type="residential",
+        top_k=3,
+    )
+
+    assert len(results) >= 1
+    assert all(isinstance(item.get("section_path"), list) for item in results)
+    assert any(item.get("section_path") for item in results)
+    assert all(item.get("section_id") for item in results)
 
 
 @pytest.mark.unit

@@ -47,6 +47,13 @@ Entry template (copy/paste):
   - Risks/Notes: <optional>
 ```
 
+- 2026-04-17 01:07:00 +05:30 | Name: GitHub-Copilot | Branch: working-tree
+  - Task: Implemented both requested foundations: multi-document ingestion and safe web scraping pipeline
+  - Files changed: services/knowledge_ingestion.py, services/safe_web_scraper.py, scripts/ingest_knowledge.py, scripts/scrape_knowledge_sources.py, knowledge/source_configs/sources.sample.json, tests/test_knowledge_ingestion_and_scraper.py, DEVELOPER_GUIDE.md, IMPLEMENTATION_ROADMAP.md
+  - Validation run: Set-Location "D:\My projects\Archi3D\backend"; & "C:/Program Files/Python314/python.exe" -m uv run pytest -q
+  - Validation result: pass, 44 passed, 3 warnings, 0 failures
+  - Risks/Notes: pypdf remains optional; pdf ingestion safely skips if dependency is unavailable
+
 - 2026-04-17 00:29:40 +05:30
   - Captured repository status snapshot.
   - Confirmed current working files include pipeline, layout, tests, and roadmap updates.
@@ -73,6 +80,8 @@ Update rules:
 - TASK-04 | Hypar API integration test harness with mocked endpoint
 
 ### Done
+- GitHub-Copilot | TASK-05 | Multi-document knowledge ingestion foundation | Completed: 2026-04-17 01:07:00 +05:30
+- GitHub-Copilot | TASK-06 | Safety-first web scraping foundation | Completed: 2026-04-17 01:07:00 +05:30
 - <owner-name> | <task-id> | <short-task-title> | Completed: <timestamp>
 
 ---
@@ -88,7 +97,7 @@ Set-Location "D:\My projects\Archi3D\backend"
 "C:/Program Files/Python314/python.exe" -m uv run pytest -q
 ```
 
-- Result: all tests passing (37/37).
+- Result: all tests passing (44/44).
 
 ---
 
@@ -141,7 +150,8 @@ These should be completed before any data scraping/training work:
 3. Structured explainability object (versioned JSON in API response, not only free-text explanation)
 4. Hypar API integration test harness with mocked endpoint
 
-Dataset scraping and training work remains deferred by plan.
+Dataset model training remains deferred by plan.
+Safe ingestion/scraping foundations are now implemented only for controlled source collection.
 
 When any item is done:
 - Move it to Section 4 with a short implementation note.

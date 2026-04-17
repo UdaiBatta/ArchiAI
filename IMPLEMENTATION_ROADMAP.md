@@ -18,6 +18,8 @@ Implemented in this iteration:
 - Layout quality scoring with adjacency and circulation metrics
 - Deterministic geometry validation checks before export
 - Optional Hypar API submission hook (config driven)
+- Multi-document knowledge ingestion pipeline (markdown/txt/pdf with metadata sidecars)
+- Safety-first web scraping pipeline (domain allowlist, robots checks, license filtering)
 
 ## Step 1 - Input Understanding
 
@@ -106,4 +108,4 @@ What it does:
 2. Expand layout feasibility checks with corridor width, stair core continuity, and service shaft constraints
 3. Add explainability schema versioning as a structured API object (not just text)
 4. Add direct Hypar API integration test harness with mocked endpoint
-5. Prepare dataset ingestion and scraping pipeline (deferred per current scope)
+5. Expand ingestion/scraper quality gates (duplicate detection, source trust scoring, and stricter citation normalization)
