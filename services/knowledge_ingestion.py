@@ -15,6 +15,11 @@ from typing import Dict, Iterable, List
 HEADING_RE = re.compile(r"^(#{1,3})\s+(.+)$")
 SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
 
+try:
+    from pypdf import PdfReader as _PdfReader  # type: ignore
+except Exception:  # pragma: no cover - optional dependency guard
+    _PdfReader = None
+
 
 @dataclass
 class IngestionResult:
@@ -115,27 +120,39 @@ def _parse_plaintext_sections(content: str, fallback_title: str) -> List[dict]:
     return sections
 
 
-def _parse_pdf_sections(path: Path, fallback_title: str) -> List[dict]:
-    try:
-        from pypdf import PdfReader  # type: ignore
-    except Exception:
+def _parse_pdf_sections(
+    path: Path,
+    fallback_title: str,
+    *,
+    max_pdf_pages: int = 300,
+    max_pdf_chars: int = 1500000,
+) -> List[dict]:
+    if _PdfReader is None:
         return []
 
     try:
-        reader = PdfReader(str(path))
+        reader = _PdfReader(str(path))
     except Exception:
         return []
 
     sections: List[dict] = []
+    running_chars = 0
     for page_index, page in enumerate(reader.pages, start=1):
+        if page_index > max_pdf_pages:
+            break
         text = (page.extract_text() or "").strip()
         if not text:
             continue
+        if running_chars >= max_pdf_chars:
+            break
+        remaining_chars = max_pdf_chars - running_chars
+        safe_text = text[:remaining_chars]
+        running_chars += len(safe_text)
         sections.append(
             {
                 "title": f"{fallback_title} Page {page_index}",
                 "section_path": [fallback_title, f"page_{page_index}"],
-                "text": text,
+                "text": safe_text,
                 "page_no": page_index,
             }
         )
@@ -143,7 +160,12 @@ def _parse_pdf_sections(path: Path, fallback_title: str) -> List[dict]:
     return sections
 
 
-def _load_document_sections(path: Path) -> List[dict]:
+def _load_document_sections(
+    path: Path,
+    *,
+    max_pdf_pages: int = 300,
+    max_pdf_chars: int = 1500000,
+) -> List[dict]:
     suffix = path.suffix.lower()
     fallback_title = path.stem.replace("_", " ").replace("-", " ").title()
 
@@ -156,7 +178,12 @@ def _load_document_sections(path: Path) -> List[dict]:
         return _parse_plaintext_sections(content, fallback_title)
 
     if suffix in {".pdf"}:
-        return _parse_pdf_sections(path, fallback_title)
+        return _parse_pdf_sections(
+            path,
+            fallback_title,
+            max_pdf_pages=max_pdf_pages,
+            max_pdf_chars=max_pdf_chars,
+        )
 
     return []
 
@@ -188,6 +215,14 @@ def _chunk_text(text: str, chunk_chars: int = 1200, overlap_chars: int = 200) ->
         cursor = max(0, end - overlap_chars)
 
     return [chunk for chunk in chunks if chunk]
+
+
+def _truncate_text_for_chunking(text: str, max_section_chars: int) -> str:
+    if max_section_chars <= 0:
+        return text
+    if len(text) <= max_section_chars:
+        return text
+    return text[:max_section_chars]
 
 
 def _chunk_entities(title: str, section_path: List[str], text: str) -> List[str]:
@@ -226,6 +261,9 @@ def ingest_documents_to_json(
     default_priority: float = 1.0,
     chunk_chars: int = 1200,
     overlap_chars: int = 200,
+    max_section_chars: int = 300000,
+    max_pdf_pages: int = 300,
+    max_pdf_chars: int = 1500000,
 ) -> IngestionResult:
     input_dir = Path(input_dir)
     output_file = Path(output_file)
@@ -242,7 +280,11 @@ def ingest_documents_to_json(
 
     for doc_path in candidates:
         metadata = _load_sidecar_metadata(doc_path)
-        sections = _load_document_sections(doc_path)
+        sections = _load_document_sections(
+            doc_path,
+            max_pdf_pages=max_pdf_pages,
+            max_pdf_chars=max_pdf_chars,
+        )
         if not sections:
             skipped.append(str(doc_path.relative_to(input_dir)))
             continue
@@ -269,6 +311,7 @@ def ingest_documents_to_json(
             section_path = [str(entry).strip() for entry in section_path if str(entry).strip()] or [title]
 
             section_text = str(section.get("text", "")).strip()
+            section_text = _truncate_text_for_chunking(section_text, max_section_chars)
             page_no = section.get("page_no")
             if page_no is not None:
                 try:
@@ -276,7 +319,15 @@ def ingest_documents_to_json(
                 except (TypeError, ValueError):
                     page_no = None
 
-            text_chunks = _chunk_text(section_text, chunk_chars=chunk_chars, overlap_chars=overlap_chars)
+            try:
+                text_chunks = _chunk_text(
+                    section_text,
+                    chunk_chars=chunk_chars,
+                    overlap_chars=overlap_chars,
+                )
+            except MemoryError:
+                skipped.append(str(doc_path.relative_to(input_dir)))
+                continue
             for part_idx, chunk_text in enumerate(text_chunks):
                 section_slug = _slugify("::".join(section_path))
                 chunk_id = f"{doc_id}_{chunk_counter}"

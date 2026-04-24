@@ -1,0 +1,84 @@
+{
+  "schema": "archi3d-hypar-concept/v1",
+  "generated_at": "2026-04-18T23:00:30.793667+00:00",
+  "metadata": {
+    "region_id": "usa_nyc",
+    "region_name": "USA \u2014 New York City (Zoning Resolution R2 Zone)",
+    "building_type": "residential",
+    "session_seed": "cc4eeeddac",
+    "explainability_schema": "archi3d.explanation.v1"
+  },
+  "levels": [
+    {
+      "level": 0,
+      "elevation_m": 0.0,
+      "height_m": 2.9
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_1",
+      "room_type": "living_room",
+      "level": 0,
+      "orientation": "northwest",
+      "origin_m": [
+        0.0,
+        9.635,
+        0.0
+      ],
+      "size_m": [
+        9.341,
+        9.635,
+        2.9
+      ]
+    },
+    {
+      "id": "zone_2",
+      "room_type": "staircase",
+      "level": 0,
+      "orientation": "northeast",
+      "origin_m": [
+        9.341,
+        9.635,
+        0.0
+      ],
+      "size_m": [
+        9.341,
+        9.635,
+        2.9
+      ]
+    },
+    {
+      "id": "zone_3",
+      "room_type": "bedroom",
+      "level": 0,
+      "orientation": "southwest",
+      "origin_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size_m": [
+        9.341,
+        9.635,
+        2.9
+      ]
+    },
+    {
+      "id": "zone_4",
+      "room_type": "kitchen",
+      "level": 0,
+      "orientation": "southeast",
+      "origin_m": [
+        9.341,
+        0.0,
+        0.0
+      ],
+      "size_m": [
+        9.341,
+        9.635,
+        2.9
+      ]
+    }
+  ]
+}

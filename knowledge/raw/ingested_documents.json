@@ -1,0 +1,8 @@
+{
+  "doc_id": "knowledge_ingestion_bundle",
+  "source": "generated:knowledge_ingestion",
+  "region_id": "all",
+  "building_type": "all",
+  "priority": 1.0,
+  "chunks": []
+}

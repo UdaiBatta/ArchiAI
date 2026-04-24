@@ -1,0 +1,2 @@
+zone_id,room_type,floor,x_m,y_m,width_m,depth_m,area_sqm,orientation,plot_width_m,plot_depth_m,plot_area_sqm,region_id,building_type
+z1,living_room,0,0.0,0.0,5.0,4.0,20.0,north,30.0,40.0,1200.0,india_mumbai,residential

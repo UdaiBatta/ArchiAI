@@ -211,3 +211,43 @@ def test_crawl_source_respects_allowlist_and_generates_manifest(monkeypatch, tmp
     saved_urls = [item["url"] for item in manifest["saved_pages"]]
     assert start_url in saved_urls
     assert next_url in saved_urls
+
+
+def test_ingest_pdf_enforces_page_and_char_limits(tmp_path, monkeypatch):
+    docs_dir = tmp_path / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = docs_dir / "large.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 fake")
+
+    class _FakePage:
+        def __init__(self, text: str):
+            self._text = text
+
+        def extract_text(self):
+            return self._text
+
+    class _FakeReader:
+        def __init__(self, _path):
+            self.pages = [
+                _FakePage("A" * 1000),
+                _FakePage("B" * 1000),
+                _FakePage("C" * 1000),
+            ]
+
+    monkeypatch.setattr("services.knowledge_ingestion._PdfReader", _FakeReader, raising=False)
+    output_file = tmp_path / "ingested_pdf.json"
+    result = ingest_documents_to_json(
+        docs_dir,
+        output_file,
+        max_pdf_pages=2,
+        max_pdf_chars=1500,
+        chunk_chars=2000,
+        overlap_chars=0,
+    )
+
+    assert result.ingested_docs == 1
+    payload = json.loads(output_file.read_text(encoding="utf-8"))
+    chunks = payload["chunks"]
+    assert len(chunks) == 2
+    total_chars = sum(len(chunk["text"]) for chunk in chunks)
+    assert total_chars <= 1500

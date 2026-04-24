@@ -45,6 +45,10 @@ REQUIRED_FIELDS = [
     "num_floors",
 ]
 
+DEFAULT_ACCEPTED_FIELDS = {
+    "building_type",
+}
+
 FIELD_QUESTIONS = {
     "region": "Which city or region should I use for building bylaws?",
     "building_type": "What type of building do you want to design?",
@@ -290,19 +294,42 @@ def check_ollama_status(host: str, model: str) -> str:
         return "unreachable"
 
 
-def check_missing_fields(parsed_data: dict) -> list[str]:
+def check_missing_fields(
+    parsed_data: dict,
+    *,
+    explicit_fields: set[str] | None = None,
+    inferred_fields: set[str] | None = None,
+) -> list[str]:
     missing_fields: list[str] = []
 
-    inferred = set(parsed_data.get("_inferred_fields", []))
+    explicit = {str(field) for field in (explicit_fields or set())}
+    inferred = {str(field) for field in (inferred_fields or set())}
 
     for field in REQUIRED_FIELDS:
-        if field in inferred or is_missing(parsed_data.get(field)):
+        value = parsed_data.get(field)
+        if is_missing(value):
+            if field not in missing_fields:
+                missing_fields.append(field)
+            continue
+
+        if field in explicit or field in inferred:
+            continue
+
+        if value == DEFAULT_INPUT.get(field):
+            if field in DEFAULT_ACCEPTED_FIELDS:
+                continue
             if field not in missing_fields:
                 missing_fields.append(field)
 
     if parsed_data.get("use_vastu") is True:
-        if "plot_facing_direction" in inferred or is_missing(
-            parsed_data.get("plot_facing_direction")
+        direction_value = parsed_data.get("plot_facing_direction")
+        if is_missing(direction_value):
+            if "plot_facing_direction" not in missing_fields:
+                missing_fields.append("plot_facing_direction")
+        elif (
+            "plot_facing_direction" not in explicit
+            and "plot_facing_direction" not in inferred
+            and direction_value == DEFAULT_INPUT["plot_facing_direction"]
         ):
             if "plot_facing_direction" not in missing_fields:
                 missing_fields.append("plot_facing_direction")
@@ -310,8 +337,13 @@ def check_missing_fields(parsed_data: dict) -> list[str]:
     return missing_fields
 
 
-def generate_clarification_questions(parsed_data: dict) -> list[str]:
-    missing_fields = check_missing_fields(parsed_data)
+def generate_clarification_questions(
+    parsed_data: dict,
+    *,
+    missing_fields: list[str] | None = None,
+) -> list[str]:
+    if missing_fields is None:
+        missing_fields = check_missing_fields(parsed_data)
 
     questions: list[str] = []
     for field in missing_fields:
@@ -466,8 +498,17 @@ def parse_design_input(
     ]
     structured["_inferred_fields"] = inferred_fields
 
-    missing_fields = check_missing_fields(structured)
-    clarification_questions = generate_clarification_questions(structured)
+    inferred_from_text_fields = set(heuristic.keys()) | set(ollama_data.keys())
+
+    missing_fields = check_missing_fields(
+        structured,
+        explicit_fields=set(explicit_fields),
+        inferred_fields=inferred_from_text_fields,
+    )
+    clarification_questions = generate_clarification_questions(
+        structured,
+        missing_fields=missing_fields,
+    )
 
     structured["_missing_fields"] = missing_fields
     structured["_clarification_questions"] = clarification_questions
@@ -476,6 +517,7 @@ def parse_design_input(
         "ollama_status": ollama_status,
         "heuristic_fields": sorted(heuristic.keys()),
         "ollama_fields": sorted(ollama_data.keys()),
+        "inferred_from_text_fields": sorted(inferred_from_text_fields),
         "explicit_fields": sorted(explicit_fields),
         "inferred_fields": inferred_fields,
         "missing_fields": missing_fields,

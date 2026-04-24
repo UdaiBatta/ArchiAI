@@ -1,0 +1,17 @@
+{
+  "source": "demo_source",
+  "visited_count": 2,
+  "saved_count": 2,
+  "skipped_count": 0,
+  "saved_pages": [
+    {
+      "url": "https://allowed.example.com/start",
+      "license": "cc-by"
+    },
+    {
+      "url": "https://allowed.example.com/next",
+      "license": "cc-by"
+    }
+  ],
+  "skipped_pages": []
+}

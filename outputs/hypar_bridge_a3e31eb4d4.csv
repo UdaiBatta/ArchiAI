@@ -1,0 +1,5 @@
+zone_id,room_type,floor,x_m,y_m,width_m,depth_m,area_sqm,orientation,region_id,building_type
+zone_1,living_room,0,0.0,141.064,106.335,141.064,15000.04,northwest,india_mumbai,residential
+zone_2,staircase,0,106.335,141.064,106.335,141.064,15000.04,northeast,india_mumbai,residential
+zone_3,parking,0,0.0,0.0,106.335,141.064,15000.04,southwest,india_mumbai,residential
+zone_4,kitchen,0,106.335,0.0,106.335,141.064,15000.04,southeast,india_mumbai,residential

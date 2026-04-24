@@ -1,0 +1,51 @@
+[
+  {
+    "name": "archdaily_editorial",
+    "start_urls": [
+      "https://www.archdaily.com/search/projects/categories/houses",
+      "https://www.archdaily.com/search/projects/categories/housing"
+    ],
+    "allowed_domains": [
+      "archdaily.com"
+    ],
+    "max_pages": 4,
+    "deny_path_keywords": [
+      "privacy",
+      "terms",
+      "account",
+      "login",
+      "cdn-cgi"
+    ]
+  },
+  {
+    "name": "wbdg_design_guides",
+    "start_urls": [
+      "https://www.wbdg.org/design-disciplines"
+    ],
+    "allowed_domains": [
+      "wbdg.org"
+    ],
+    "max_pages": 4,
+    "deny_path_keywords": [
+      "login",
+      "search",
+      "privacy",
+      "terms"
+    ]
+  },
+  {
+    "name": "nps_preservation_guides",
+    "start_urls": [
+      "https://www.nps.gov/subjects/historicpreservation/index.htm"
+    ],
+    "allowed_domains": [
+      "nps.gov"
+    ],
+    "max_pages": 4,
+    "deny_path_keywords": [
+      "privacy",
+      "contactus",
+      "search"
+    ]
+  }
+]

@@ -1,0 +1,1 @@
+[{"name": "valid_source", "start_urls": ["https://example.org/start"], "allowed_domains": ["example.org"], "max_pages": 5, "allowed_licenses": ["cc-by"]}, {"name": "invalid_missing_domains", "start_urls": ["https://invalid.local"]}, "bad_entry"]

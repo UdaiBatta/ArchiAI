@@ -29,8 +29,24 @@ from django.conf import settings
 from django.db import connection
 from pathlib import Path
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.generic import TemplateView
+
 from services.bylaw_loader import list_available_regions
 from services.input_parser import check_ollama_status
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class LocalPlaygroundView(TemplateView):
+    """
+    GET /
+
+    Minimal HTML page to test POST /api/v1/design/ from the browser.
+    The backend is otherwise API-only; this avoids a 404 on the site root.
+    """
+
+    template_name = "health/playground.html"
 
 
 class HealthCheckView(APIView):

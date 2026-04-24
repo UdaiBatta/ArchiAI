@@ -1,0 +1,70 @@
+{
+  "source": "nps_preservation_guides",
+  "visited_count": 15,
+  "saved_count": 14,
+  "skipped_count": 1,
+  "saved_pages": [
+    {
+      "url": "https://www.nps.gov/subjects/historicpreservation/index.htm",
+      "license": null
+    },
+    {
+      "url": "https://nps.gov/articles/nr_digitization.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/aboutus/accessibility.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/aboutus/disclaimer.htm",
+      "license": "public-domain"
+    },
+    {
+      "url": "https://www.nps.gov/aboutus/faqs.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/aboutus/foia/index.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/aboutus/notices.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/aboutus/vulnerability-disclosure-policy.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/orgs/1623/hpf-in-action.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/subjects/heritageareas/discover-nhas.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/subjects/heritagedocumentation/virtual-content-overview.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/subjects/heritagetravel/discover-our-shared-heritage.htm",
+      "license": null
+    },
+    {
+      "url": "https://www.nps.gov/subjects/historicpreservation/",
+      "license": null
+    }
+  ],
+  "skipped_pages": [
+    {
+      "url": "https://www.ncptt.nps.gov/",
+      "reason": "robots_disallowed"
+    }
+  ]
+}

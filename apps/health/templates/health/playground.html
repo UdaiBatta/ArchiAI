@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+    content="Archi3D API Workspace — AI-assisted architectural planning system. Run design pipelines, check bylaw compliance, and generate Hypar models.">
+  <title>Archi3D · API Workspace</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* ─────────────────────────────────────────────────────────────
+       DESIGN TOKENS
+       ───────────────────────────────────────────────────────────── */
+    :root {
+      --bg-base: #080c18;
+      --bg-layer: #0d1224;
+      --bg-glass: rgba(255, 255, 255, 0.045);
+      --bg-glass-hover: rgba(255, 255, 255, 0.07);
+      --bg-glass-active: rgba(255, 255, 255, 0.1);
+      --border-glass: rgba(255, 255, 255, 0.1);
+      --border-glass-strong: rgba(255, 255, 255, 0.18);
+
+      --ink: #f0f4ff;
+      --ink-muted: #8b95b8;
+      --ink-faint: #4a5270;
+
+      --teal-100: #ccfdf0;
+      --teal-300: #5ef5d0;
+      --teal-400: #00d4aa;
+      --teal-500: #00b896;
+      --teal-600: #009478;
+
+      --cyan-400: #00c2e0;
+      --cyan-500: #009ec0;
+
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --sky: #38bdf8;
+      --violet: #a78bfa;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.6);
+      --shadow-glow: 0 0 40px rgba(0, 212, 170, 0.15);
+
+      --duration-fast: 150ms;
+      --duration-base: 250ms;
+      --duration-slow: 400ms;
+      --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       RESET & BASE
+       ───────────────────────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--ink);
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0, 180, 140, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 110%, rgba(0, 150, 200, 0.1) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 80% at 50% 50%, rgba(10, 20, 50, 0.3) 0%, transparent 70%);
+      overflow-x: hidden;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       SCROLLBAR
+       ───────────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       LAYOUT
+       ───────────────────────────────────────────────────────────── */
+    .shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: grid;
+      gap: 20px;
+      animation: pageEnter var(--duration-slow) var(--ease-out) both;
+    }
+
+    @keyframes pageEnter {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       GLASS CARD
+       ───────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      box-shadow: var(--shadow-md);
+      transition: border-color var(--duration-base) var(--ease-out),
+        box-shadow var(--duration-base) var(--ease-out);
+    }
+
+    .card:hover {
+      border-color: var(--border-glass-strong);
+    }
+
+    .panel {
+      padding: 24px;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       HERO HEADER
+       ───────────────────────────────────────────────────────────── */
+    .hero {
+      padding: 28px 32px;
+      background:
+        linear-gradient(135deg, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+        linear-gradient(225deg, rgba(0, 194, 224, 0.06) 0%, transparent 50%),
+        rgba(13, 18, 36, 0.7);
+      border-color: rgba(0, 212, 170, 0.2);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 120% at 100% 50%, rgba(0, 212, 170, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hero-text {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 212, 170, 0.12);
+      border: 1px solid rgba(0, 212, 170, 0.3);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--teal-300);
+      margin-bottom: 10px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal-400);
+      box-shadow: 0 0 8px var(--teal-400);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.6;
+        transform: scale(0.85);
+      }
+    }
+
+    .hero h1 {
+      font-size: clamp(1.75rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 30%, var(--teal-300) 70%, var(--cyan-400));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      margin-top: 8px;
+      color: var(--ink-muted);
+      font-size: 0.93rem;
+      max-width: 60ch;
+    }
+
+    .hero-nav {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .nav-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      padding: 6px 14px;
+      border: 1px solid var(--border-glass);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      background: var(--bg-glass);
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .nav-pill:hover {
+      color: var(--ink);
+      border-color: var(--border-glass-strong);
+      background: var(--bg-glass-hover);
+      transform: translateY(-1px);
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 200px;
+    }
+
+    .stat-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stat-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.teal {
+      background: rgba(0, 212, 170, 0.15);
+    }
+
+    .stat-icon.cyan {
+      background: rgba(0, 194, 224, 0.15);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--ink-faint);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-val {
+      font-size: 0.88rem;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       WORKSPACE GRID
+       ───────────────────────────────────────────────────────────── */
+    .workspace {
+      display: grid;
+      gap: 20px;
+    }
+
+    @media (min-width: 980px) {
+      .workspace {
+        grid-template-columns: minmax(520px, 1.1fr) minmax(340px, 0.9fr);
+        align-items: start;
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       SECTION HEADERS
+       ───────────────────────────────────────────────────────────── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .section-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      background: rgba(0, 212, 170, 0.12);
+      border: 1px solid rgba(0, 212, 170, 0.2);
+      flex-shrink: 0;
+    }
+
+    .section-icon.blue {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.2);
+    }
+
+    .section-head h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+
+    .section-hint {
+      font-size: 0.82rem;
+      color: var(--ink-faint);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       FORM ELEMENTS
+       ───────────────────────────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Plot dims row: 3 balanced columns */
+    #plot-dims-row {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    /* Detected-region badge */
+    .detected-region-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--indigo-light, #818cf8);
+      min-height: 38px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .detected-region-badge .badge-icon {
+      font-size: 1rem;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    label .tip {
+      font-size: 0.72rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--ink-faint);
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-sm);
+      padding: 10px 13px;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.88rem;
+      transition: border-color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
+      -webkit-appearance: none;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      scrollbar-width: thin;
+    }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b95b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--teal-400);
+      background: rgba(0, 212, 170, 0.05);
+      box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.12);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--ink-faint);
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       ADVANCED OPTIONS ACCORDION
+       ───────────────────────────────────────────────────────────── */
+    .accordion {
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .accordion-toggle {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: none;
+      border-radius: 0;
+      color: var(--ink-muted);
+      font: inherit;
+      font-size: 0.83rem;
+      font-weight: 600;
+      padding: 11px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: background var(--duration-fast), color var(--duration-fast);
+    }
+
+    .accordion-toggle:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--ink);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .accordion-toggle[aria-expanded="true"] {
+      color: var(--teal-300);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .accordion-chevron {
+      transition: transform var(--duration-base) var(--ease-out);
+      font-size: 10px;
+    }
+
+    .accordion-toggle[aria-expanded="true"] .accordion-chevron {
+      transform: rotate(180deg);
+    }
+
+    .accordion-body {
+      padding: 16px;
+      display: none;
+      background: rgba(0, 0, 0, 0.15);
+      animation: slideDown var(--duration-base) var(--ease-out);
+    }
+
+    .accordion-body.open {
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Toggle Switch */
+    .toggle-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toggle-label-text {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--ink-muted);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-track {
+      display: block;
+      width: 40px;
+      height: 22px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      transition: background var(--duration-fast), border-color var(--duration-fast);
+      position: relative;
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ink-faint);
+      transition: transform var(--duration-base) var(--ease-out), background var(--duration-fast);
+    }
+
+    .toggle-switch input:checked+.toggle-track {
+      background: rgba(0, 212, 170, 0.25);
+      border-color: var(--teal-400);
+    }
+
+    .toggle-switch input:checked+.toggle-track .toggle-thumb {
+      transform: translateX(18px);
+      background: var(--teal-400);
+      box-shadow: 0 0 8px rgba(0, 212, 170, 0.5);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       BUTTONS
+       ───────────────────────────────────────────────────────────── */
+    button {
+      font: inherit;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: var(--bg-glass);
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 0.88rem;
+      padding: 10px 18px;
+      transition: all var(--duration-fast) var(--ease-out);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0);
+      transition: background var(--duration-fast);
+    }
+
+    button:hover {
+      border-color: var(--border-glass-strong);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    button:hover::after {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal-400), var(--cyan-500));
+      border-color: transparent;
+      color: #0a1a15;
+      box-shadow: 0 4px 20px rgba(0, 212, 170, 0.3);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 28px rgba(0, 212, 170, 0.45);
+      border-color: transparent;
+    }
+
+    .btn-secondary {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .btn-sm {
+      padding: 7px 13px;
+      font-size: 0.82rem;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn-fallback-row {
+      margin-top: 8px;
+    }
+
+    /* Spinner inside button */
+    .spinner {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top-color: rgba(0, 0, 0, 0.7);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .btn-primary .spinner {
+      border-color: rgba(0, 0, 0, 0.2);
+      border-top-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .is-loading .spinner {
+      display: inline-block !important;
+    }
+
+    .is-loading .btn-label {
+      opacity: 0.8;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       STATUS STRIP
+       ───────────────────────────────────────────────────────────── */
+    .status-strip {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      transition: border-color var(--duration-base);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .pill-idle {
+      background: rgba(139, 149, 184, 0.15);
+      color: var(--ink-muted);
+      border: 1px solid rgba(139, 149, 184, 0.2);
+    }
+
+    .pill-idle::before {
+      background: var(--ink-faint);
+    }
+
+    .pill-run {
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--sky);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .pill-run::before {
+      background: var(--sky);
+      box-shadow: 0 0 6px var(--sky);
+      animation: pulse 1s infinite;
+    }
+
+    .pill-ok {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .pill-ok::before {
+      background: var(--emerald);
+    }
+
+    .pill-warn {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .pill-warn::before {
+      background: var(--amber);
+    }
+
+    .pill-bad {
+      background: rgba(244, 63, 94, 0.1);
+      color: var(--rose);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+    }
+
+    .pill-bad::before {
+      background: var(--rose);
+    }
+
+    .status-note {
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      min-width: 0;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       SNAPSHOT / METRIC CARDS
+       ───────────────────────────────────────────────────────────── */
+    .snapshot-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric-card {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      transition: border-color var(--duration-fast), transform var(--duration-fast);
+    }
+
+    .metric-card:hover {
+      border-color: var(--border-glass-strong);
+      transform: translateY(-1px);
+    }
+
+    .metric-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-faint);
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--ink);
+      word-break: break-word;
+    }
+
+    .metric-sub {
+      margin-top: 3px;
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+      word-break: break-word;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       PIPELINE STAGES
+       ───────────────────────────────────────────────────────────── */
+    .pipeline {
+      margin-bottom: 16px;
+    }
+
+    .pipeline-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-faint);
+      margin-bottom: 10px;
+    }
+
+    .stages {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      position: relative;
+    }
+
+    .stage {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      padding: 10px 8px;
+      text-align: center;
+      transition: all var(--duration-base) var(--ease-out);
+      cursor: default;
+    }
+
+    .stage-icon {
+      font-size: 16px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .stage-name {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+      margin-bottom: 2px;
+    }
+
+    .stage-note {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--ink-faint);
+    }
+
+    .stage-pending {}
+
+    .stage-ok {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .stage-ok .stage-name {
+      color: var(--emerald);
+    }
+
+    .stage-ok .stage-note {
+      color: rgba(16, 185, 129, 0.7);
+    }
+
+    .stage-warn {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.25);
+    }
+
+    .stage-warn .stage-name {
+      color: var(--amber);
+    }
+
+    .stage-warn .stage-note {
+      color: rgba(245, 158, 11, 0.7);
+    }
+
+    .stage-fail {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.25);
+    }
+
+    .stage-fail .stage-name {
+      color: var(--rose);
+    }
+
+    .stage-fail .stage-note {
+      color: rgba(244, 63, 94, 0.7);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       INFO BOXES (brief, artifacts)
+       ───────────────────────────────────────────────────────────── */
+    .info-box {
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-glass);
+      padding: 14px 16px;
+      margin-top: 14px;
+      background: rgba(0, 0, 0, 0.2);
+      animation: fadeIn var(--duration-base) var(--ease-out);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .info-box.teal-tint {
+      background: rgba(0, 212, 170, 0.04);
+      border-color: rgba(0, 212, 170, 0.2);
+    }
+
+    .info-box-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .info-box-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .info-box-hint {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+    }
+
+    .info-list {
+      list-style: none;
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .info-list li {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      padding-left: 12px;
+      position: relative;
+    }
+
+    .info-list li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--teal-400);
+    }
+
+    .info-list li strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .info-list a {
+      color: var(--teal-300);
+      text-decoration: none;
+      word-break: break-all;
+      font-size: 0.78rem;
+    }
+
+    .info-list a:hover {
+      text-decoration: underline;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       RESPONSE PANEL
+       ───────────────────────────────────────────────────────────── */
+    .response-panel {}
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar-spacer {
+      flex: 1;
+    }
+
+    /* JSON Viewer */
+    .json-viewer-wrap {
+      background: #080d1a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .json-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .json-lang-tag {
+      font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    pre#out {
+      margin: 0;
+      padding: 18px 20px;
+      overflow: auto;
+      max-height: 500px;
+      font-family: 'JetBrains Mono', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #c9d3f5;
+      background: transparent;
+      tab-size: 2;
+    }
+
+    /* Syntax coloring via JS-injected spans */
+    .json-key {
+      color: #79c0ff;
+    }
+
+    .json-str {
+      color: #a5d0a5;
+    }
+
+    .json-num {
+      color: #e3b341;
+    }
+
+    .json-bool {
+      color: #f8a070;
+    }
+
+    .json-null {
+      color: #8b9cc7;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       SESSION HISTORY
+       ───────────────────────────────────────────────────────────── */
+    .history-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 4px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 13px;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-glass);
+      cursor: pointer;
+      transition: all var(--duration-fast);
+      text-decoration: none;
+    }
+
+    .history-item:hover {
+      border-color: var(--border-glass-strong);
+      background: var(--bg-glass-hover);
+      transform: translateX(2px);
+    }
+
+    .history-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-ok {
+      background: var(--emerald);
+      box-shadow: 0 0 6px var(--emerald);
+    }
+
+    .dot-warn {
+      background: var(--amber);
+      box-shadow: 0 0 6px var(--amber);
+    }
+
+    .dot-fail {
+      background: var(--rose);
+      box-shadow: 0 0 6px var(--rose);
+    }
+
+    .dot-idle {
+      background: var(--ink-faint);
+    }
+
+    .history-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-region {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .history-detail {
+      font-size: 0.72rem;
+      color: var(--ink-muted);
+      margin-top: 1px;
+    }
+
+    .history-time {
+      font-size: 0.7rem;
+      color: var(--ink-faint);
+      white-space: nowrap;
+    }
+
+    .history-empty {
+      font-size: 0.82rem;
+      color: var(--ink-faint);
+      padding: 16px 0;
+      text-align: center;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       PANEL DIVIDER
+       ───────────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border-glass), transparent);
+      margin: 20px 0;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       TOAST NOTIFICATIONS
+       ───────────────────────────────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(20, 28, 52, 0.95);
+      border: 1px solid var(--border-glass-strong);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 0.84rem;
+      color: var(--ink);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+      backdrop-filter: blur(16px);
+      animation: toastIn 0.25s var(--ease-out) both,
+        toastOut 0.25s var(--ease-out) 2.75s both;
+    }
+
+    .toast.ok {
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .toast.warn {
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .toast.bad {
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       RESPONSIVE
+       ───────────────────────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .shell {
+        padding: 14px 14px 40px;
+        gap: 14px;
+      }
+
+      .hero {
+        padding: 20px;
+      }
+
+      .panel {
+        padding: 18px 16px;
+      }
+
+      .hero-stats {
+        display: none;
+      }
+
+      .snapshot-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stages {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .btn-row {
+        flex-direction: column;
+      }
+
+      .btn-row button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       FOCUS VISIBILITY
+       ───────────────────────────────────────────────────────────── */
+    :focus-visible {
+      outline: 2px solid var(--teal-400);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <main class="shell">
+
+    <!-- ── HERO HEADER ────────────────────────────────────────────── -->
+    <header class="card hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="hero-badge">Phase 2 / 3 Prototype</div>
+          <h1>Archi3D API&nbsp;Workspace</h1>
+          <p class="hero-sub">
+            AI-assisted architectural planning — bylaw compliance, conceptual layout generation,
+            Vastu integration, and Hypar export. Run design pipelines directly from this console.
+          </p>
+          <nav class="hero-nav" aria-label="Quick links">
+            <a class="nav-pill" href="/api/v1/health/">⚡ Health</a>
+            <a class="nav-pill" href="/api/v1/design/list/">📋 Sessions</a>
+            <a class="nav-pill" href="/admin/">🔧 Admin</a>
+            <a class="nav-pill" href="/api/v1/design/jobs/">⚙ Jobs</a>
+          </nav>
+        </div>
+
+        <aside class="hero-stats" aria-label="System overview">
+          <div class="stat-card">
+            <div class="stat-icon teal">🏗</div>
+            <div>
+              <div class="stat-label">Engine</div>
+              <div class="stat-val">Bylaw + RAG + Vastu</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon cyan">🌍</div>
+            <div>
+              <div class="stat-label">Regions</div>
+              <div class="stat-val" id="region-count">Mumbai · Delhi · NYC · Default</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <!-- ── WORKSPACE ──────────────────────────────────────────────── -->
+    <div class="workspace">
+
+      <!-- LEFT PANEL — Design Request -->
+      <section class="card panel" aria-labelledby="design-request-heading">
+        <div class="section-head">
+          <div class="section-icon">✏️</div>
+          <div>
+            <h2 id="design-request-heading">Design Request</h2>
+            <p class="section-hint">Describe your project — plot dimensions and direction auto-detected from text, or set precisely below.</p>
+          </div>
+        </div>
+
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+          <div class="field">
+            <label for="raw_text">
+              Requirements text
+              <span class="tip">(natural language)</span>
+            </label>
+            <textarea id="raw_text" aria-describedby="char-count-raw"
+              placeholder="E.g. Design a 3-floor residential house in Mumbai on a 30×40m plot with parking and a balcony.">Design a 2-floor residential house in Mumbai on a 30 by 40 metre plot with parking.</textarea>
+            <div class="char-count" id="char-count-raw" aria-live="polite">0 / 500</div>
+          </div>
+
+          <!-- Plot dimensions — primary explicit inputs derived from RPLAN conventions -->
+          <div class="field-row" id="plot-dims-row">
+            <div class="field">
+              <label for="plot_width_m">
+                Plot width <span class="tip">(metres)</span>
+              </label>
+              <input type="number" id="plot_width_m" value="30" min="3" max="500" step="0.5"
+                aria-describedby="plot-dims-hint">
+            </div>
+            <div class="field">
+              <label for="plot_depth_m">
+                Plot depth <span class="tip">(metres)</span>
+              </label>
+              <input type="number" id="plot_depth_m" value="40" min="3" max="500" step="0.5">
+            </div>
+            <div class="field">
+              <label for="building_type">Building type</label>
+              <select id="building_type">
+                <option value="residential" selected>Residential</option>
+                <option value="commercial">Commercial</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Auto-detected region badge (read-only; sourced from raw_text) -->
+          <div class="field">
+            <label>Bylaw region
+              <span class="tip">(auto-detected from your description)</span>
+            </label>
+            <div class="detected-region-badge" id="detected-region-badge" role="status"
+              aria-live="polite">
+              <span class="badge-icon">🌐</span>
+              <span id="detected-region-text">Will be inferred from text</span>
+            </div>
+          </div>
+
+        </div><!-- /.form-grid -->
+
+        <!-- Advanced Options Accordion -->
+        <div class="accordion">
+          <button class="accordion-toggle" aria-expanded="false" aria-controls="advanced-options-body"
+            id="advanced-options-toggle" type="button">
+            <span>⚙ Advanced options</span>
+            <span class="accordion-chevron">▼</span>
+          </button>
+          <div class="accordion-body" id="advanced-options-body" role="region"
+            aria-labelledby="advanced-options-toggle">
+            <div class="form-grid">
+
+              <div class="field-row">
+                <div class="field">
+                  <label for="num_floors">Floors</label>
+                  <input type="number" id="num_floors" value="2" min="1" max="20">
+                </div>
+                <div class="field">
+                  <label for="num_units">Units</label>
+                  <input type="number" id="num_units" value="1" min="1">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="plot_facing_direction">Plot facing direction</label>
+                <select id="plot_facing_direction">
+                  <option value="north" selected>North</option>
+                  <option value="south">South</option>
+                  <option value="east">East</option>
+                  <option value="west">West</option>
+                  <option value="northeast">North-East</option>
+                  <option value="northwest">North-West</option>
+                  <option value="southeast">South-East</option>
+                  <option value="southwest">South-West</option>
+                </select>
+              </div>
+
+              <div class="toggle-field">
+                <span class="toggle-label-text">Enable Vastu Shastra layer</span>
+                <label class="toggle-switch" for="use_vastu" aria-label="Enable Vastu Shastra">
+                  <input type="checkbox" id="use_vastu">
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </label>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="field">
+                <label for="hypar_api_url">Hypar API URL <span class="tip">(optional)</span></label>
+                <input type="url" id="hypar_api_url" placeholder="https://your-hypar-endpoint">
+              </div>
+              <div class="field">
+                <label for="hypar_api_token">Hypar API token <span class="tip">(optional)</span></label>
+                <input type="password" id="hypar_api_token" placeholder="Bearer token">
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="btn-row">
+          <button class="btn-primary" type="button" id="auto-create" aria-label="Auto-create project in Hypar">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label">⚡ Auto-create in Hypar</span>
+          </button>
+          <button class="btn-secondary" type="button" id="run" aria-label="Run design pipeline">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label">▶ Run pipeline</span>
+          </button>
+        </div>
+
+        <div class="btn-fallback-row">
+          <button type="button" id="bridge" class="btn-sm"
+            title="Manual Hypar package (fallback when auto-create unavailable)">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label">📦 Generate Hypar package</span>
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Status -->
+        <div class="status-strip" id="status-strip" role="status" aria-live="polite">
+          <span class="pill pill-idle" id="status-pill">Idle</span>
+          <span class="status-note" id="status-note">Ready to create your next concept.</span>
+        </div>
+
+      </section>
+
+      <!-- RIGHT PANEL — Execution Snapshot -->
+      <section class="card panel" aria-labelledby="exec-snapshot-heading">
+        <div class="section-head">
+          <div class="section-icon blue">📊</div>
+          <div>
+            <h2 id="exec-snapshot-heading">Execution Snapshot</h2>
+            <p class="section-hint">Live summary of last pipeline run.</p>
+          </div>
+        </div>
+
+        <!-- Metric cards -->
+        <div class="snapshot-grid">
+          <div class="metric-card">
+            <div class="metric-label">Endpoint</div>
+            <div class="metric-value" id="snap-endpoint">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">HTTP status</div>
+            <div class="metric-value" id="snap-http">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Pipeline</div>
+            <div class="metric-value" id="snap-pipeline">—</div>
+            <div class="metric-sub" id="snap-clarify"></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Hypar</div>
+            <div class="metric-value" id="snap-hypar">—</div>
+            <div class="metric-sub" id="snap-hypar-reason"></div>
+          </div>
+        </div>
+
+        <!-- Pipeline stages -->
+        <div class="pipeline">
+          <div class="pipeline-label">Pipeline stages</div>
+          <div class="stages" id="timeline">
+            <div class="stage stage-pending" id="stage-parse">
+              <span class="stage-icon">🔍</span>
+              <span class="stage-name">Parse</span>
+              <span class="stage-note" id="stage-note-parse">pending</span>
+            </div>
+            <div class="stage stage-pending" id="stage-compliance">
+              <span class="stage-icon">⚖</span>
+              <span class="stage-name">Compliance</span>
+              <span class="stage-note" id="stage-note-compliance">pending</span>
+            </div>
+            <div class="stage stage-pending" id="stage-layout">
+              <span class="stage-icon">🗺</span>
+              <span class="stage-name">Layout</span>
+              <span class="stage-note" id="stage-note-layout">pending</span>
+            </div>
+            <div class="stage stage-pending" id="stage-hypar">
+              <span class="stage-icon">🏢</span>
+              <span class="stage-name">Hypar</span>
+              <span class="stage-note" id="stage-note-hypar">pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Design brief box -->
+        <div class="info-box teal-tint" id="brief-box" hidden>
+          <div class="info-box-head">
+            <span>💡</span>
+            <span class="info-box-title">Optimization brief</span>
+          </div>
+          <div class="info-box-hint" id="brief-summary"></div>
+          <ul class="info-list" id="brief-notes" style="margin-top: 10px;"></ul>
+        </div>
+
+        <!-- Artifacts box -->
+        <div class="info-box" id="artifact-box" hidden>
+          <div class="info-box-head">
+            <span>📁</span>
+            <span class="info-box-title">Hypar artifacts</span>
+          </div>
+          <div class="info-box-hint">Manual fallback import assets — use only when direct auto-create is unavailable.
+          </div>
+          <ul class="info-list" id="artifact-links" style="margin-top: 10px;"></ul>
+        </div>
+
+        <!-- Session history -->
+        <div class="divider"></div>
+        <div class="section-head" style="margin-bottom: 12px;">
+          <span
+            style="font-size:0.8rem; font-weight:700; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.05em;">Recent
+            sessions</span>
+          <button class="btn-sm" type="button" id="refresh-history" title="Refresh session history"
+            style="margin-left:auto; padding:5px 10px; font-size:0.75rem;">↻ Refresh</button>
+        </div>
+        <div class="history-list" id="history-list" aria-label="Recent design sessions">
+          <div class="history-empty">Loading sessions…</div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ── RESPONSE PANEL ──────────────────────────────────────────── -->
+    <section class="card panel response-panel" aria-labelledby="response-heading">
+      <div class="section-head">
+        <div class="section-icon blue">📄</div>
+        <div>
+          <h2 id="response-heading">API Response</h2>
+          <p class="section-hint">Full JSON payload from the last request.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" class="btn-sm" id="copy-request">📋 Copy request</button>
+        <button type="button" class="btn-sm" id="copy-response">📋 Copy response</button>
+        <span class="toolbar-spacer"></span>
+        <button type="button" class="btn-sm" id="clear-response" title="Clear response panel">✕ Clear</button>
+      </div>
+
+      <div class="json-viewer-wrap">
+        <div class="json-header">
+          <span class="json-lang-tag">JSON</span>
+        </div>
+        <pre id="out"
+          aria-label="API response JSON">Click "Auto-create in Hypar" or "Run pipeline" to get started.</pre>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /* ════════════════════════════════════════════════════════════════
+       STATE
+       ════════════════════════════════════════════════════════════════ */
+    let lastRequestPayload = {};
+    let lastResponseText = '';
+
+    const buttons = {
+      autoCreate: document.getElementById('auto-create'),
+      run: document.getElementById('run'),
+      bridge: document.getElementById('bridge'),
+    };
+
+    /* ════════════════════════════════════════════════════════════════
+       CHAR COUNTER
+       ════════════════════════════════════════════════════════════════ */
+    const rawTextEl = document.getElementById('raw_text');
+    const charCount = document.getElementById('char-count-raw');
+    function updateCharCount() {
+      charCount.textContent = rawTextEl.value.length + ' / 500';
+    }
+    rawTextEl.addEventListener('input', updateCharCount);
+    updateCharCount();
+
+    /* ════════════════════════════════════════════════════════════════
+       ACCORDION
+       ════════════════════════════════════════════════════════════════ */
+    const accToggle = document.getElementById('advanced-options-toggle');
+    const accBody = document.getElementById('advanced-options-body');
+    accToggle.addEventListener('click', () => {
+      const expanded = accToggle.getAttribute('aria-expanded') === 'true';
+      accToggle.setAttribute('aria-expanded', String(!expanded));
+      accBody.classList.toggle('open', !expanded);
+    });
+
+    /* ════════════════════════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+       ════════════════════════════════════════════════════════════════ */
+    function showToast(msg, type = 'ok') {
+      const container = document.getElementById('toast-container');
+      const icons = { ok: '✅', warn: '⚠️', bad: '❌' };
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.innerHTML = '<span>' + icons[type] + '</span> ' + msg;
+      container.appendChild(t);
+      setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, 3100);
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       DOM HELPERS
+       ════════════════════════════════════════════════════════════════ */
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(value || '—');
+    }
+
+    function setStage(name, state, note) {
+      const stage = document.getElementById('stage-' + name);
+      const stageNote = document.getElementById('stage-note-' + name);
+      if (!stage || !stageNote) return;
+      stage.className = 'stage stage-' + state;
+      stageNote.textContent = note;
+    }
+
+    function setStatus(kind, note) {
+      const pill = document.getElementById('status-pill');
+      const noteEl = document.getElementById('status-note');
+      const labels = {
+        'pill-run': 'Running',
+        'pill-ok': 'Success',
+        'pill-warn': 'Fallback',
+        'pill-bad': 'Error',
+        'pill-idle': 'Idle',
+      };
+      pill.className = 'pill ' + kind;
+      pill.textContent = labels[kind] || kind;
+      noteEl.textContent = note;
+    }
+
+    function setBusy(btn, isBusy) {
+      btn.disabled = isBusy;
+      btn.classList.toggle('is-loading', isBusy);
+      btn.setAttribute('aria-busy', String(isBusy));
+    }
+
+    function setAllBusy(isBusy) {
+      Object.values(buttons).forEach(b => setBusy(b, isBusy));
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       FORM DATA
+       ════════════════════════════════════════════════════════════════ */
+    /* ── Auto-fill plot dimensions from raw_text ──────────────────────────── */
+    const rawTextEl = document.getElementById('raw_text');
+    const widthEl   = document.getElementById('plot_width_m');
+    const depthEl   = document.getElementById('plot_depth_m');
+
+    // Track if user has manually edited the dimension fields
+    let userEditedWidth = false, userEditedDepth = false;
+    widthEl.addEventListener('input', () => { userEditedWidth = true; });
+    depthEl.addEventListener('input', () => { userEditedDepth = true; });
+
+    rawTextEl.addEventListener('input', () => {
+      const t = rawTextEl.value.toLowerCase();
+      // Match patterns like 30x40, 30 x 40, 30×40, 30 by 40
+      const m = t.match(/(\d+(?:\.\d+)?)\s*(?:x|×|by)\s*(\d+(?:\.\d+)?)/);
+      if (m) {
+        if (!userEditedWidth) { widthEl.value = parseFloat(m[1]); }
+        if (!userEditedDepth) { depthEl.value = parseFloat(m[2]); }
+      }
+      // Auto-detect region hint from common city names
+      const cityMap = {
+        'mumbai': '🇮🇳 india_mumbai',
+        'delhi': '🇮🇳 india_delhi',
+        'bengaluru': '🇮🇳 india_bangalore',
+        'bangalore': '🇮🇳 india_bangalore',
+        'chennai': '🇮🇳 india_chennai',
+        'new york': '🇺🇸 usa_nyc',
+        'nyc': '🇺🇸 usa_nyc',
+        'london': '🇬🇧 uk_london',
+        'dubai': '🇦🇪 uae_dubai',
+      };
+      const regionText = document.getElementById('detected-region-text');
+      let matched = 'Will be inferred from text';
+      for (const [city, label] of Object.entries(cityMap)) {
+        if (t.includes(city)) { matched = label; break; }
+      }
+      regionText.textContent = matched;
+    });
+
+    function requestBodyFromForm() {
+      const body = {
+        raw_text: document.getElementById('raw_text').value,
+        building_type: document.getElementById('building_type').value,
+        plot_width_m: parseFloat(document.getElementById('plot_width_m').value) || 30.0,
+        plot_depth_m: parseFloat(document.getElementById('plot_depth_m').value) || 40.0,
+        num_floors: parseInt(document.getElementById('num_floors').value, 10) || 2,
+        num_units: parseInt(document.getElementById('num_units').value, 10) || 1,
+        plot_facing_direction: document.getElementById('plot_facing_direction').value,
+        use_vastu: document.getElementById('use_vastu').checked,
+        // Explicitly mark fields the user set so the backend won't infer/override them
+        _explicit_fields: ['plot_width_m', 'plot_depth_m', 'building_type', 'num_floors', 'num_units'],
+      };
+      const hyparUrl = (document.getElementById('hypar_api_url').value || '').trim();
+      const hyparToken = (document.getElementById('hypar_api_token').value || '').trim();
+      if (hyparUrl) body.hypar_api_url = hyparUrl;
+      if (hyparToken) body.hypar_api_token = hyparToken;
+      return body;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       SYNTAX HIGHLIGHTING (lightweight, no deps)
+       ════════════════════════════════════════════════════════════════ */
+    function syntaxHighlight(json) {
+      const escaped = json
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return escaped.replace(
+        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        match => {
+          let cls = 'json-num';
+          if (/^"/.test(match)) {
+            cls = /:$/.test(match) ? 'json-key' : 'json-str';
+          } else if (/true|false/.test(match)) {
+            cls = 'json-bool';
+          } else if (/null/.test(match)) {
+            cls = 'json-null';
+          }
+          return '<span class="' + cls + '">' + match + '</span>';
+        }
+      );
+    }
+
+    function renderOutput(text) {
+      const out = document.getElementById('out');
+      try {
+        const obj = JSON.parse(text.indexOf('\n') > 0 ? text.split('\n').slice(2).join('\n') : text);
+        out.innerHTML = syntaxHighlight(JSON.stringify(obj, null, 2));
+      } catch (e) {
+        out.textContent = text;
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       OUTPUT URL HELPER
+       ════════════════════════════════════════════════════════════════ */
+    function toOutputUrl(relativePath) {
+      const value = String(relativePath || '').trim().replace(/^\/+/, '');
+      if (!value) return '';
+      return '/outputs/' + value.split('/').map(encodeURIComponent).join('/');
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       RENDER ARTIFACTS
+       ════════════════════════════════════════════════════════════════ */
+    function renderArtifacts(payload, endpoint) {
+      const box = document.getElementById('artifact-box');
+      const list = document.getElementById('artifact-links');
+      list.innerHTML = '';
+
+      const isBridgeFlow = endpoint === '/api/v1/design/hypar/bridge/';
+      if (!isBridgeFlow) { box.hidden = true; return; }
+
+      const bridge = (payload && payload.hypar_bridge) ? payload.hypar_bridge : {};
+      const entries = [
+        { label: 'Requirements spreadsheet (upload this first)', path: bridge.requirements_artifact_path },
+        { label: 'Zone/floor spreadsheet', path: bridge.artifact_path },
+        { label: 'Elements reference JSON', path: payload.hypar_elements_reference_path },
+        { label: 'Hypar concept JSON', path: payload.hypar_json_path },
+      ];
+
+      let count = 0;
+      for (const item of entries) {
+        if (!item.path) continue;
+        const url = toOutputUrl(item.path);
+        if (!url) continue;
+        const li = document.createElement('li');
+        li.innerHTML = '<strong>' + item.label + ':</strong> <a href="' + url + '" target="_blank" rel="noreferrer">' + item.path + '</a>';
+        list.appendChild(li);
+        count++;
+      }
+      box.hidden = count === 0;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       RENDER DESIGN BRIEF
+       ════════════════════════════════════════════════════════════════ */
+    function renderDesignBrief(payload) {
+      const box = document.getElementById('brief-box');
+      const summary = document.getElementById('brief-summary');
+      const list = document.getElementById('brief-notes');
+      const brief = (payload && payload.design_brief) ? payload.design_brief : null;
+
+      if (!brief) { box.hidden = true; summary.textContent = ''; list.innerHTML = ''; return; }
+
+      summary.textContent = brief.presentation_summary || '';
+      const lines = [
+        { label: 'Zoning', value: brief.zoning_note },
+        { label: 'Circulation', value: brief.circulation_note },
+        { label: 'Optimization', value: brief.optimization_note },
+        { label: 'Daylight & ventilation', value: brief.daylight_ventilation_note },
+        { label: 'Structural grid', value: brief.structural_grid_note },
+        { label: 'Geometry', value: brief.geometry_note },
+      ];
+
+      list.innerHTML = '';
+      let count = 0;
+      for (const line of lines) {
+        if (!line.value) continue;
+        const li = document.createElement('li');
+        li.innerHTML = '<strong>' + line.label + ':</strong> ' + line.value;
+        list.appendChild(li);
+        count++;
+      }
+      box.hidden = count === 0 && !summary.textContent;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       RENDER SNAPSHOT
+       ════════════════════════════════════════════════════════════════ */
+    function renderSnapshot(endpoint, result, payload) {
+      setText('snap-endpoint', endpoint);
+      setText('snap-http', result.status + ' ' + result.statusText);
+
+      const pipelineStatus = String(payload.status || (result.status >= 400 ? 'failed' : 'ok'));
+      setText('snap-pipeline', pipelineStatus);
+
+      const requiresClarification = Boolean(payload.requires_clarification);
+      setText('snap-clarify', requiresClarification ? '⚠ Clarification required' : '✓ No clarification needed');
+
+      const hyparSubmission = payload.hypar_submission || {};
+      const hyparSubmitted = hyparSubmission.submitted === true;
+      setText('snap-hypar', hyparSubmitted ? '✓ submitted' : '✗ not submitted');
+      setText('snap-hypar-reason', hyparSubmitted ? 'Provider accepted payload' : (hyparSubmission.reason || 'no direct submit'));
+
+      const zones = Array.isArray(payload.layout_zones)
+        ? payload.layout_zones.length
+        : Number((payload.hypar_bridge && payload.hypar_bridge.zone_count) || 0);
+
+      setStage('parse', result.status < 500 ? 'ok' : 'fail', result.status < 500 ? 'input parsed' : 'parse failed');
+
+      if (requiresClarification) {
+        setStage('compliance', 'warn', 'awaiting input');
+      } else if (payload.compliance_report || payload.design_brief) {
+        setStage('compliance', 'ok', 'rules evaluated');
+      } else {
+        setStage('compliance', 'pending', 'not run');
+      }
+
+      if (zones > 0 || payload.hypar_json_path) {
+        setStage('layout', 'ok', zones + ' zone' + (zones !== 1 ? 's' : ''));
+      } else if (requiresClarification) {
+        setStage('layout', 'warn', 'blocked');
+      } else {
+        setStage('layout', 'pending', 'no geometry');
+      }
+
+      if (endpoint === '/api/v1/design/hypar/auto-create/') {
+        if (payload.status === 'created_in_hypar') {
+          setStage('hypar', 'ok', 'project created');
+        } else if (payload.status === 'hypar_submission_failed') {
+          setStage('hypar', 'fail', String(payload.reason || 'failed'));
+        } else if (requiresClarification) {
+          setStage('hypar', 'warn', 'awaiting clarification');
+        } else {
+          setStage('hypar', 'pending', 'not attempted');
+        }
+      } else if (endpoint === '/api/v1/design/hypar/bridge/') {
+        setStage('hypar', 'warn', 'manual fallback');
+      } else {
+        if (hyparSubmitted) {
+          setStage('hypar', 'ok', 'submitted via pipeline');
+        } else {
+          setStage('hypar', 'pending', 'not requested');
+        }
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       API FETCH
+       ════════════════════════════════════════════════════════════════ */
+    async function postJson(endpoint, bodyPayload) {
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      const r = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(bodyPayload),
+      });
+      const text = await r.text();
+      let payload = null;
+      try { payload = JSON.parse(text); } catch (e) { payload = null; }
+      return { status: r.status, statusText: r.statusText, text, payload };
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       RUN ENDPOINT (core logic — functionally identical to original)
+       ════════════════════════════════════════════════════════════════ */
+    async function runEndpoint(endpoint, loadingLabel) {
+      const out = document.getElementById('out');
+      setAllBusy(true);
+      setStatus('pill-run', loadingLabel);
+      out.textContent = loadingLabel;
+
+      try {
+        const bodyPayload = requestBodyFromForm();
+        lastRequestPayload = bodyPayload;
+        const result = await postJson(endpoint, bodyPayload);
+
+        const responseBody = result.payload
+          ? JSON.stringify(result.payload, null, 2)
+          : result.text;
+        lastResponseText = result.status + ' ' + result.statusText + '\n\n' + responseBody;
+
+        renderOutput(lastResponseText);
+        renderArtifacts(result.payload || {}, endpoint);
+        renderDesignBrief(result.payload || {});
+        renderSnapshot(endpoint, result, result.payload || {});
+
+        const payload = result.payload || {};
+
+        if (endpoint === '/api/v1/design/hypar/auto-create/' && payload.status === 'created_in_hypar') {
+          const hyparUrl = String(payload.hypar_project_url || '').trim();
+          if (hyparUrl) {
+            setStatus('pill-ok', 'Project created. Opening Hypar in a new tab.');
+            showToast('Hypar project created!', 'ok');
+            window.open(hyparUrl, '_blank', 'noopener');
+          } else {
+            setStatus('pill-warn', 'Project created but Hypar did not return a direct URL.');
+            showToast('Created — no Hypar URL returned.', 'warn');
+            out.textContent += '\n\nNote: Project was created, but no Hypar URL was returned by the API response.';
+          }
+        }
+
+        if (endpoint === '/api/v1/design/hypar/auto-create/' && payload.status === 'hypar_submission_failed') {
+          const reason = String(payload.reason || '').trim() || 'unknown';
+          if (reason === 'not_configured') {
+            setStatus('pill-warn', 'Direct Hypar creation is not configured. Set HYPAR_API_URL and HYPAR_API_TOKEN in backend .env.');
+            showToast('Hypar not configured — set env vars.', 'warn');
+            out.textContent += '\n\nDirect Hypar creation is not configured yet. Set HYPAR_API_URL and HYPAR_API_TOKEN in backend .env, or send hypar_api_url and hypar_api_token from your request payload.';
+          } else {
+            setStatus('pill-bad', 'Hypar submission failed: ' + reason);
+            showToast('Hypar submission failed.', 'bad');
+          }
+        }
+
+        if (endpoint === '/api/v1/design/' && result.status >= 200 && result.status < 300) {
+          setStatus('pill-ok', 'Pipeline complete. Review brief and response payload.');
+          showToast('Pipeline completed successfully.', 'ok');
+        }
+        if (endpoint === '/api/v1/design/hypar/bridge/' && result.status >= 200 && result.status < 300) {
+          setStatus('pill-warn', 'Fallback package generated. Use manual upload only if auto-create is unavailable.');
+          showToast('Hypar package generated.', 'warn');
+        }
+        if (result.status >= 400 && !(endpoint === '/api/v1/design/hypar/auto-create/' && payload.status === 'hypar_submission_failed')) {
+          setStatus('pill-bad', 'Request failed. Check response details.');
+          showToast('Request failed (' + result.status + ').', 'bad');
+        }
+
+        // Refresh history after any successful run
+        if (result.status < 400) loadHistory();
+
+      } catch (e) {
+        out.textContent = 'Error: ' + e;
+        renderArtifacts({}, endpoint);
+        renderDesignBrief({});
+        renderSnapshot(endpoint, { status: 500, statusText: 'Client Error' }, {});
+        setStatus('pill-bad', 'Request error: ' + e);
+        showToast('Network error.', 'bad');
+      } finally {
+        setAllBusy(false);
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       SESSION HISTORY
+       ════════════════════════════════════════════════════════════════ */
+    function statusDotClass(s) {
+      const m = {
+        completed: 'dot-ok', compliance_checked: 'dot-ok', layout_generated: 'dot-ok',
+        model_generated: 'dot-ok',
+        received: 'dot-idle',
+        failed: 'dot-fail',
+      };
+      return m[s] || 'dot-idle';
+    }
+
+    function timeAgo(iso) {
+      const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+      if (diff < 60) return diff + 's ago';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    async function loadHistory() {
+      const container = document.getElementById('history-list');
+      try {
+        const r = await fetch('/api/v1/design/list/', { credentials: 'same-origin' });
+        const sessions = await r.json();
+        if (!Array.isArray(sessions) || sessions.length === 0) {
+          container.innerHTML = '<div class="history-empty">No sessions yet. Run a design pipeline above.</div>';
+          return;
+        }
+        container.innerHTML = '';
+        sessions.slice(0, 15).forEach(s => {
+          const item = document.createElement('a');
+          item.href = '/api/v1/design/' + s.session_id + '/';
+          item.target = '_blank';
+          item.rel = 'noreferrer';
+          item.className = 'history-item';
+          const compliant = s.is_fully_compliant === true ? '✓ compliant' : s.is_fully_compliant === false ? '✗ non-compliant' : '';
+          item.innerHTML = `
+            <span class="history-status-dot ${statusDotClass(s.status)}"></span>
+            <div class="history-meta">
+              <div class="history-region">${s.region} · ${s.plot_width_m}×${s.plot_depth_m}m · ${s.num_floors}F</div>
+              <div class="history-detail">${s.status}${compliant ? ' · ' + compliant : ''}</div>
+            </div>
+            <div class="history-time">${timeAgo(s.created_at)}</div>
+          `;
+          container.appendChild(item);
+        });
+      } catch (e) {
+        container.innerHTML = '<div class="history-empty">Could not load sessions.</div>';
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       CLIPBOARD
+       ════════════════════════════════════════════════════════════════ */
+    async function copyText(text) {
+      if (!text) return false;
+      try { await navigator.clipboard.writeText(text); return true; }
+      catch (_) { return false; }
+    }
+
+    document.getElementById('copy-request').addEventListener('click', async function () {
+      const body = Object.keys(lastRequestPayload || {}).length
+        ? lastRequestPayload
+        : requestBodyFromForm();
+      const ok = await copyText(JSON.stringify(body, null, 2));
+      if (ok) { setStatus('pill-ok', 'Request copied.'); showToast('Request payload copied.', 'ok'); }
+      else { setStatus('pill-warn', 'Copy failed in this browser.'); }
+    });
+
+    document.getElementById('copy-response').addEventListener('click', async function () {
+      const text = lastResponseText || document.getElementById('out').textContent;
+      const ok = await copyText(text);
+      if (ok) { setStatus('pill-ok', 'Response copied.'); showToast('Response copied.', 'ok'); }
+      else { setStatus('pill-warn', 'Copy failed in this browser.'); }
+    });
+
+    document.getElementById('clear-response').addEventListener('click', function () {
+      document.getElementById('out').textContent = 'Response cleared.';
+      lastResponseText = '';
+    });
+
+    /* ════════════════════════════════════════════════════════════════
+       EVENT LISTENERS
+       ════════════════════════════════════════════════════════════════ */
+    document.getElementById('run').addEventListener('click', function () {
+      runEndpoint('/api/v1/design/', 'Running design pipeline…');
+    });
+
+    document.getElementById('bridge').addEventListener('click', function () {
+      runEndpoint('/api/v1/design/hypar/bridge/', 'Generating Hypar package…');
+    });
+
+    document.getElementById('auto-create').addEventListener('click', function () {
+      runEndpoint('/api/v1/design/hypar/auto-create/', 'Attempting direct Hypar project creation…');
+    });
+
+    document.getElementById('refresh-history').addEventListener('click', loadHistory);
+
+    /* ════════════════════════════════════════════════════════════════
+       INIT
+       ════════════════════════════════════════════════════════════════ */
+    loadHistory();
+  </script>
+</body>
+
+</html>

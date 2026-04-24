@@ -47,6 +47,7 @@ FIELD TYPES USED:
     DateTimeField → Date + time (auto_now_add sets it once on creation)
 """
 
+import uuid
 from django.db import models
 
 
@@ -299,3 +300,52 @@ class DesignSession(models.Model):
     def plot_area_sqm(self) -> float:
         """Computed property: total plot area in sq.m."""
         return self.plot_width_m * self.plot_depth_m
+
+
+class OperationJob(models.Model):
+    """Persistent tracker for long-running bridge/ingestion operations."""
+
+    JOB_TYPE_CHOICES = [
+        ("hypar_bridge_export", "Hypar Bridge Export"),
+        ("knowledge_ingestion", "Knowledge Ingestion"),
+    ]
+    STATUS_CHOICES = [
+        ("queued", "Queued"),
+        ("running", "Running"),
+        ("retrying", "Retrying"),
+        ("clarification_required", "Clarification Required"),
+        ("succeeded", "Succeeded"),
+        ("failed", "Failed"),
+        ("timed_out", "Timed Out"),
+    ]
+
+    job_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    job_type = models.CharField(max_length=50, choices=JOB_TYPE_CHOICES)
+    status = models.CharField(max_length=40, choices=STATUS_CHOICES, default="queued")
+    request_payload = models.JSONField(default=dict, blank=True)
+    result_payload = models.JSONField(default=dict, blank=True)
+    session = models.ForeignKey(
+        DesignSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="operation_jobs",
+    )
+    artifact_path = models.CharField(max_length=500, blank=True, default="")
+    retry_count = models.PositiveIntegerField(default=0)
+    max_retries = models.PositiveIntegerField(default=2)
+    timeout_seconds = models.PositiveIntegerField(default=120)
+    failure_reason = models.TextField(blank=True, default="")
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = "design"
+        ordering = ["-created_at"]
+        verbose_name = "Operation Job"
+        verbose_name_plural = "Operation Jobs"
+
+    def __str__(self) -> str:
+        return f"{self.job_id} | {self.job_type} | {self.status}"

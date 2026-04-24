@@ -1,0 +1,70 @@
+{
+  "doc_id": "knowledge_ingestion_bundle",
+  "source": "generated:knowledge_ingestion",
+  "region_id": "all",
+  "building_type": "all",
+  "priority": 1.0,
+  "chunks": [
+    {
+      "id": "sample_0",
+      "title": "Rules",
+      "text": "Setback must be respected.",
+      "source": "sample.md",
+      "region_id": "all",
+      "building_type": "all",
+      "tags": [
+        "must",
+        "respected",
+        "rules",
+        "setback"
+      ],
+      "doc_id": "sample",
+      "chapter_id": "rules",
+      "section_id": "rules",
+      "section_path": [
+        "Rules"
+      ],
+      "page_no": null,
+      "clause_id": "rules",
+      "entities": [
+        "rules",
+        "setback",
+        "must",
+        "respected"
+      ],
+      "priority": 1.0,
+      "part_index": 0
+    },
+    {
+      "id": "sample_1",
+      "title": "Ventilation",
+      "text": "Allow cross ventilation.",
+      "source": "sample.md",
+      "region_id": "all",
+      "building_type": "all",
+      "tags": [
+        "allow",
+        "cross",
+        "rules",
+        "ventilation"
+      ],
+      "doc_id": "sample",
+      "chapter_id": "rules",
+      "section_id": "rules-ventilation",
+      "section_path": [
+        "Rules",
+        "Ventilation"
+      ],
+      "page_no": null,
+      "clause_id": "rules-ventilation",
+      "entities": [
+        "ventilation",
+        "rules",
+        "allow",
+        "cross"
+      ],
+      "priority": 1.0,
+      "part_index": 0
+    }
+  ]
+}

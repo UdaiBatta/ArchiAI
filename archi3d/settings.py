@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     # Declare types and defaults for each variable
     DEBUG=(bool, True),
-    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1", "testserver"]),
     CORS_ALLOWED_ORIGINS=(list, ["http://localhost:5173"]),
     OLLAMA_HOST=(str, "http://localhost:11434"),
     OLLAMA_MODEL=(str, "llama3.2"),
@@ -45,6 +45,8 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY", default="dev-insecure-key-change-in-production")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+if "testserver" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, "testserver"]
 
 # ── Installed Applications ─────────────────────────────────────────────────────
 # Order matters: Django processes middleware and signals in this order.
@@ -158,4 +160,10 @@ ARCHI3D = {
     "RAG_TOP_K": env("RAG_TOP_K"),
     "HYPAR_API_URL": env("HYPAR_API_URL"),
     "HYPAR_API_TOKEN": env("HYPAR_API_TOKEN"),
+    "GRAPH2PLAN_ROOT": BASE_DIR / "Graph2plan-master",
+    "JOB_SYNC_EXECUTION": False,
+    "KNOWLEDGE_SOURCE_DIR": BASE_DIR / "knowledge" / "source_docs",
+    "KNOWLEDGE_OUTPUT_FILE": BASE_DIR / "knowledge" / "raw" / "ingested_documents.json",
+    "INGESTION_MAX_PDF_PAGES": 300,
+    "INGESTION_MAX_PDF_CHARS": 1500000,
 }

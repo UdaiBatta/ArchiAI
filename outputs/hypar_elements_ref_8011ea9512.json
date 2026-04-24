@@ -1,0 +1,100 @@
+{
+  "format": "archi3d.elements_reference/v1",
+  "generated_at": "2026-04-22T15:28:01.727331+00:00",
+  "documentation": {
+    "hypar_elements_api": "https://hypar-io.github.io/Elements/api/Elements.html",
+    "description": "Hypar Elements defines geometric model types (Wall, Space, Floor, Model, \u2026). Use this file as a bridge for custom importers; it is not a complete Elements Model serialization."
+  },
+  "metadata": {
+    "region_id": "india_mumbai",
+    "region_name": "India \u2014 Mumbai (DCPR 2034)",
+    "building_type": "residential",
+    "session_seed": "8011ea9512",
+    "explainability_schema": "archi3d.explanation.v1"
+  },
+  "levels_hint": [
+    {
+      "index": 0,
+      "elevation_m": 0.0,
+      "elements_doc_anchor": "Elements has no single 'Level' class in the index; use elevation / Space placement \u2014 see Model and Space."
+    }
+  ],
+  "elements": [
+    {
+      "kind": "Space",
+      "hypar_elements_type": "Space",
+      "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.html \u2014 Space: extruded occupiable region",
+      "name": "living_room",
+      "architectural_zone_id": "zone_1",
+      "level_index": 0,
+      "origin_m": [
+        0.0,
+        13.743,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ],
+      "note": "Map to Elements.Space with profile/boundary as your importer requires."
+    },
+    {
+      "kind": "Space",
+      "hypar_elements_type": "Space",
+      "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.html \u2014 Space: extruded occupiable region",
+      "name": "staircase",
+      "architectural_zone_id": "zone_2",
+      "level_index": 0,
+      "origin_m": [
+        10.914,
+        13.743,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ],
+      "note": "Map to Elements.Space with profile/boundary as your importer requires."
+    },
+    {
+      "kind": "Space",
+      "hypar_elements_type": "Space",
+      "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.html \u2014 Space: extruded occupiable region",
+      "name": "parking",
+      "architectural_zone_id": "zone_3",
+      "level_index": 0,
+      "origin_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ],
+      "note": "Map to Elements.Space with profile/boundary as your importer requires."
+    },
+    {
+      "kind": "Space",
+      "hypar_elements_type": "Space",
+      "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.html \u2014 Space: extruded occupiable region",
+      "name": "kitchen",
+      "architectural_zone_id": "zone_4",
+      "level_index": 0,
+      "origin_m": [
+        10.914,
+        0.0,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ],
+      "note": "Map to Elements.Space with profile/boundary as your importer requires."
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "doc_id": "knowledge_ingestion_bundle",
+  "source": "generated:knowledge_ingestion",
+  "region_id": "all",
+  "building_type": "all",
+  "priority": 1.0,
+  "chunks": [
+    {
+      "id": "delhi_rules_v1_0",
+      "title": "Setbacks",
+      "text": "Front setback should be 3m for this zone.",
+      "source": "delhi_rules_handbook",
+      "region_id": "india_delhi",
+      "building_type": "residential",
+      "tags": [
+        "bylaw",
+        "front",
+        "setback",
+        "setbacks",
+        "should",
+        "zone"
+      ],
+      "doc_id": "delhi_rules_v1",
+      "chapter_id": "chapter_setbacks",
+      "section_id": "setbacks",
+      "section_path": [
+        "Setbacks"
+      ],
+      "page_no": null,
+      "clause_id": "dr-setbacks",
+      "entities": [
+        "setbacks",
+        "front",
+        "setback",
+        "should",
+        "zone"
+      ],
+      "priority": 1.25,
+      "part_index": 0
+    },
+    {
+      "id": "delhi_rules_v1_1",
+      "title": "Ventilation",
+      "text": "Every habitable room should have natural ventilation.",
+      "source": "delhi_rules_handbook",
+      "region_id": "india_delhi",
+      "building_type": "residential",
+      "tags": [
+        "bylaw",
+        "every",
+        "habitable",
+        "natural",
+        "room",
+        "setback",
+        "setbacks",
+        "should",
+        "ventilation"
+      ],
+      "doc_id": "delhi_rules_v1",
+      "chapter_id": "chapter_setbacks",
+      "section_id": "setbacks-ventilation",
+      "section_path": [
+        "Setbacks",
+        "Ventilation"
+      ],
+      "page_no": null,
+      "clause_id": "dr-setbacks-ventilation",
+      "entities": [
+        "ventilation",
+        "setbacks",
+        "every",
+        "habitable",
+        "room",
+        "should",
+        "natural"
+      ],
+      "priority": 1.25,
+      "part_index": 0
+    }
+  ]
+}

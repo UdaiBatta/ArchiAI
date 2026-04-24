@@ -1,0 +1,51 @@
+{
+  "doc_id": "knowledge_ingestion_bundle",
+  "source": "generated:knowledge_ingestion",
+  "region_id": "all",
+  "building_type": "all",
+  "priority": 1.0,
+  "chunks": [
+    {
+      "id": "source_doc_0",
+      "title": "Source Doc Part 1",
+      "text": "Room placement should prioritize daylight and natural airflow.",
+      "source": "source_doc.txt",
+      "region_id": "all",
+      "building_type": "all",
+      "tags": [
+        "doc",
+        "part",
+        "part_1",
+        "placement",
+        "prioritize",
+        "room",
+        "should",
+        "source"
+      ],
+      "doc_id": "source_doc",
+      "chapter_id": "source-doc",
+      "section_id": "source-doc-part-1",
+      "section_path": [
+        "Source Doc",
+        "part_1"
+      ],
+      "page_no": null,
+      "clause_id": "source-doc-part-1",
+      "entities": [
+        "source",
+        "doc",
+        "part",
+        "part_1",
+        "room",
+        "placement",
+        "should",
+        "prioritize",
+        "daylight",
+        "natural",
+        "airflow"
+      ],
+      "priority": 1.0,
+      "part_index": 0
+    }
+  ]
+}

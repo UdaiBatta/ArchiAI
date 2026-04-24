@@ -13,6 +13,7 @@ def build_explanation(
     layout_notes: List[str],
     geometry_validation: Dict[str, object] | None = None,
     hypar_submission: Dict[str, object] | None = None,
+    design_brief: Dict[str, object] | None = None,
 ) -> str:
     lines: List[str] = []
 
@@ -71,5 +72,20 @@ def build_explanation(
         else:
             reason = hypar_submission.get("reason", "unknown")
             lines.append(f"Hypar submission: skipped/failed ({reason}).")
+
+    if design_brief:
+        lines.append("Optimization brief:")
+        zoning_note = str(design_brief.get("zoning_note", "") or "")
+        circulation_note = str(design_brief.get("circulation_note", "") or "")
+        optimization_note = str(design_brief.get("optimization_note", "") or "")
+        summary = str(design_brief.get("presentation_summary", "") or "")
+        if zoning_note:
+            lines.append(f"- Zoning: {zoning_note}")
+        if circulation_note:
+            lines.append(f"- Circulation: {circulation_note}")
+        if optimization_note:
+            lines.append(f"- Optimization: {optimization_note}")
+        if summary:
+            lines.append(f"- Presentation: {summary}")
 
     return "\n".join(lines)

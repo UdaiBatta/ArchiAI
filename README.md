@@ -1,1 +1,193 @@
-# ArchiAI
+# Archi3D Backend
+
+Backend-first Django + DRF service for deterministic bylaw-compliant architectural planning, explainable layout generation, and Hypar bridge exports.
+
+## Run locally (Windows, fastest path)
+
+1. Open **PowerShell** and go to this folder (quotes matter if the path has spaces):
+
+   ```powershell
+   cd "D:\My projects\Archi3D\backend"
+   ```
+
+2. Install dependencies (uses the locked `uv.lock`):
+
+   ```powershell
+   uv sync
+   ```
+
+3. Apply the database migrations:
+
+   ```powershell
+   uv run python manage.py migrate
+   ```
+
+4. Start the dev server (bind explicitly so the URL is predictable):
+
+   ```powershell
+   uv run python manage.py runserver 127.0.0.1:8000
+   ```
+
+5. In your browser open:
+
+   - **http://127.0.0.1:8000/** — simple page where you can type requirements and click **Run design pipeline** (this calls `POST /api/v1/design/`).
+   - **http://127.0.0.1:8000/api/v1/health/** — JSON status check (database, bylaws, Ollama, RAG).
+
+If the root URL used to show **404**, that was expected before: there was no home page. Now `/` serves the local test page.
+
+**Common issues**
+
+- **`python` is not recognized**: use `uv run python ...` from this folder after `uv sync`, or activate `.venv` and run `python manage.py ...`.
+- **Wrong folder**: run commands from the directory that contains `manage.py` (the `backend` folder), not a parent folder.
+- **Port in use**: try `uv run python manage.py runserver 127.0.0.1:8001` and open that port instead.
+- **PowerShell and `&&`**: older PowerShell does not support `&&`; run commands **one per line**, or use `;` between commands.
+
+**Test the API without the browser (PowerShell)**
+
+```powershell
+$body = @{
+  raw_text = "Design a 2-floor residential house in Mumbai on a 30x40m plot with parking."
+  region = "india_mumbai"
+  building_type = "residential"
+  plot_width_m = 30
+  plot_depth_m = 40
+  num_floors = 2
+  num_units = 1
+  plot_facing_direction = "north"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/design/" -Method Post -ContentType "application/json; charset=utf-8" -Body $body
+```
+
+There is still **no file-upload UI** for PDFs in this repo; knowledge files are ingested via scripts or the ingestion job API. The design pipeline accepts **JSON** (and natural language in `raw_text`).
+
+### Hypar: Elements API vs spreadsheet vs this backend
+
+- **[Hypar Elements API (namespace Elements)](https://hypar-io.github.io/Elements/api/Elements.html)** documents the **Elements** model library (e.g. `Space`, `Wall`, `Floor`, `Model`) used in Hypar’s geometry stack. It is **not** the same as logging into hypar.io and using **Upload spreadsheet**; it is the reference for **types and concepts** when you build importers, plugins, or Hypar Functions in .NET/C#.
+- **Spreadsheet / CSV**: our bridge still produces a **CSV** for the product’s manual upload flow; that remains the simplest path without a product API token.
+- **JSON outputs from Archi3D**:
+  - `hypar_<seed>.json` — internal concept schema `archi3d-hypar-concept/v1`.
+  - `hypar_elements_ref_<seed>.json` — **Elements-oriented hints** (same `outputs/` folder when layout export runs): maps each zone to a documented `Space`-style record and points at the Elements docs URL above. Use it as a bridge for a custom Elements-based tool; it is **not** a full serialized Elements `Model`.
+
+The API response includes **`hypar_elements_reference_path`** (filename) when that file is written.
+
+## Setup
+
+- Install deps with lockfile:
+  - `uv sync`
+- Apply migrations:
+  - `uv run python manage.py migrate`
+- Run server:
+  - `uv run python manage.py runserver 127.0.0.1:8000`
+- Run tests:
+  - `uv run pytest -q`
+
+## Core API Workflow
+
+- Generate direct design session:
+  - `POST /api/v1/design/`
+- Auto-create project in Hypar (direct submit):
+  - `POST /api/v1/design/hypar/auto-create/`
+- Trigger synchronous Hypar bridge export (legacy):
+  - `POST /api/v1/design/hypar/bridge/`
+- Trigger background Hypar bridge export job:
+  - `POST /api/v1/design/hypar/bridge/jobs/`
+- Trigger background ingestion job:
+  - `POST /api/v1/design/ingestion/jobs/`
+- Check single job:
+  - `GET /api/v1/design/jobs/<job_id>/`
+- List recent jobs:
+  - `GET /api/v1/design/jobs/?limit=20`
+
+## API-First: Requirements-Only + Optional Hypar Auto-Submit
+
+You can call `POST /api/v1/design/` from your own frontend/backend with only `raw_text`.
+If `raw_text` includes plot dimensions (for example, `30x40`), the parser uses them directly and does not force a separate `plot_width_m` / `plot_depth_m` entry.
+
+Optional request placeholders for direct Hypar automation:
+
+- `hypar_api_url`
+- `hypar_api_token`
+- `hypar_project_name`
+
+Example request body:
+
+```json
+{
+  "raw_text": "Design a 2-floor residential house in Mumbai on a 30x40 metre plot with parking.",
+  "hypar_api_url": "https://your-hypar-endpoint",
+  "hypar_api_token": "<your-token>",
+  "hypar_project_name": "Archi3D Demo Project"
+}
+```
+
+Response includes `hypar_submission` to indicate direct submission outcome.
+Credentials are consumed at runtime and removed from persisted `parsed_input`.
+
+For direct submit behavior, prefer:
+
+- `POST /api/v1/design/hypar/auto-create/`
+
+This endpoint returns:
+
+- `status=created_in_hypar` when project creation succeeds
+- `status=hypar_submission_failed` when credentials/endpoint are missing or submission fails
+
+## Production-Safe Defaults Added
+
+- Bridge and ingestion operations have persistent `OperationJob` tracking.
+- Bridge jobs capture status lifecycle (`queued`, `running`, `retrying`, `clarification_required`, `succeeded`, `failed`, `timed_out`).
+- Bridge jobs support configurable retries and timeout tracking.
+- Ingestion now enforces strict PDF limits:
+  - max pages per PDF
+  - max extracted characters per PDF
+- Clarification gate remains enforced before heavy generation.
+
+## Example: Background Bridge Job
+
+Request:
+
+```json
+{
+  "raw_text": "Design a 2-floor residential house in Mumbai",
+  "region": "india_mumbai",
+  "building_type": "residential",
+  "plot_width_m": 30,
+  "plot_depth_m": 40,
+  "num_floors": 2,
+  "num_units": 1,
+  "plot_facing_direction": "north",
+  "max_retries": 2,
+  "timeout_seconds": 120
+}
+```
+
+Polling:
+
+- `GET /api/v1/design/jobs/<job_id>/`
+- Inspect `status`, `failure_reason`, `result_payload`, `artifact_path`.
+
+## Ingestion Operational Notes
+
+- Default source dir: `knowledge/source_docs`
+- Default output file: `knowledge/raw/ingested_documents.json`
+- Override limits from ingestion job payload:
+  - `max_pdf_pages`
+  - `max_pdf_chars`
+  - `max_section_chars`
+
+## Web Scraping Prototype (Design Knowledge)
+
+Use the safety-first scraper to collect architecture pages into retriever-ready chunks.
+
+- Prototype source config:
+  - `knowledge/source_configs/sources.prototype.json`
+- Run scraper:
+  - `uv run python scripts/scrape_knowledge_sources.py --config knowledge/source_configs/sources.prototype.json --crawl-output-dir outputs/scraped --payload-output knowledge/raw/scraped_sources.json --region-id all --building-type all --priority 0.85 --timeout-seconds 12`
+- What it writes:
+  - raw crawled pages + manifests under `outputs/scraped/<source>/`
+  - chunk payload at `knowledge/raw/scraped_sources.json`
+
+Notes:
+- Scraper enforces domain allowlist and robots checks.
+- For prototype speed, this config does not enforce license filtering; tighten this before production.

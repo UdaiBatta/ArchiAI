@@ -9,14 +9,17 @@ from uuid import uuid4
 from django.conf import settings
 
 from services.bylaw_loader import detect_region, load_bylaws
+from services.design_brief_builder import build_optimized_design_brief
 from services.explanation_builder import build_explanation
 from services.geometry_builder import build_hypar_payload, write_hypar_json
+from services.hypar_elements_reference import write_hypar_elements_reference_json
 from services.geometry_validator import validate_layout_geometry
 from services.hypar_client import submit_hypar_payload
 from services.input_parser import parse_design_input
 from services.layout_generator import generate_conceptual_layout
 from services.rule_engine import run_full_compliance
 from services.vastu_rules import evaluate_vastu_preferences
+from services.furniture_placer import place_furniture
 from services.vectorless_rag import (
     VectorlessKnowledgeRetriever,
     build_bylaw_context_chunks,
@@ -39,6 +42,15 @@ def _clarification_only_response(
     parser_meta: Dict[str, Any],
 ) -> Dict[str, Any]:
     parsed_input["_parser_meta"] = parser_meta
+    design_brief = build_optimized_design_brief(
+        parsed_input=parsed_input,
+        compliance_report={},
+        layout_zones=[],
+        layout_metrics={},
+        geometry_validation=None,
+        requires_clarification=True,
+    )
+    parsed_input["_design_brief"] = design_brief
 
     explanation = (
         "Clarification required before full generation. "
@@ -62,6 +74,8 @@ def _clarification_only_response(
         },
         "layout_zones": [],
         "explanation": explanation,
+        "design_brief": design_brief,
+        "hypar_submission": {"submitted": False, "reason": "clarification_required"},
         "glb_file_path": "",
         "hypar_json_path": "",
         "status": "received",
@@ -71,19 +85,27 @@ def _clarification_only_response(
 
 
 def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
+    runtime_input = dict(input_data or {})
+    runtime_hypar_api_url = str(
+        runtime_input.pop("_hypar_api_url", runtime_input.pop("hypar_api_url", "")) or ""
+    ).strip()
+    runtime_hypar_api_token = str(
+        runtime_input.pop("_hypar_api_token", runtime_input.pop("hypar_api_token", "")) or ""
+    ).strip()
+
     archi3d_settings = getattr(settings, "ARCHI3D", {})
     ollama_model = archi3d_settings.get("OLLAMA_MODEL", "llama3.2")
     ollama_host = archi3d_settings.get("OLLAMA_HOST", "http://localhost:11434")
     top_k = int(archi3d_settings.get("RAG_TOP_K", 5))
-    hypar_api_url = str(archi3d_settings.get("HYPAR_API_URL", "") or "")
-    hypar_api_token = str(archi3d_settings.get("HYPAR_API_TOKEN", "") or "")
+    hypar_api_url = runtime_hypar_api_url or str(archi3d_settings.get("HYPAR_API_URL", "") or "")
+    hypar_api_token = runtime_hypar_api_token or str(archi3d_settings.get("HYPAR_API_TOKEN", "") or "")
 
     knowledge_root = Path(archi3d_settings.get("KNOWLEDGE_DIR", settings.BASE_DIR / "knowledge"))
     knowledge_raw_dir = knowledge_root / "raw"
     outputs_dir = Path(archi3d_settings.get("OUTPUTS_DIR", settings.BASE_DIR / "outputs"))
 
     parsed_input, parser_meta = parse_design_input(
-        incoming_data=input_data,
+        incoming_data=runtime_input,
         ollama_model=ollama_model,
         ollama_host=ollama_host,
     )
@@ -128,6 +150,15 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
     layout_zones = layout_result.get("zones", [])
     layout_notes = layout_result.get("layout_notes", [])
     layout_metrics = layout_result.get("layout_metrics", {})
+    footprint = layout_result.get("footprint", {})
+
+    # --- Furniture placement (Neufert + RPLAN-informed) ----------------------
+    furniture_elements = place_furniture(
+        zones=layout_zones,
+        floor_height_m=bylaws.floor_height_m,
+        parsed_input=parsed_input,
+    )
+
     geometry_validation = validate_layout_geometry(layout_zones)
     if not geometry_validation.get("valid", False):
         layout_notes.append(
@@ -140,7 +171,22 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         enabled=bool(parsed_input.get("use_vastu")),
     )
 
+    design_brief = build_optimized_design_brief(
+        parsed_input=parsed_input,
+        compliance_report=compliance_report.to_dict(),
+        layout_zones=layout_zones,
+        layout_metrics=layout_metrics,
+        geometry_validation=geometry_validation,
+        requires_clarification=False,
+    )
+
     session_seed = uuid4().hex[:10]
+    hypar_project_name = str(parsed_input.get("hypar_project_name", "") or "").strip()
+    if not hypar_project_name:
+        hypar_project_name = (
+            str(parsed_input.get("raw_text", "") or "").strip()[:60] or f"Archi3D_{session_seed}"
+        )
+
     hypar_json_path = ""
     hypar_submission = {"submitted": False, "reason": "deferred"}
     hypar_payload = {}
@@ -149,12 +195,25 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         hypar_payload = build_hypar_payload(
             layout_zones=layout_zones,
             floor_height_m=bylaws.floor_height_m,
+            furniture_elements=furniture_elements,
             metadata={
                 "region_id": bylaws.region_id,
                 "region_name": bylaws.region_name,
                 "building_type": bylaws.building_type,
                 "session_seed": session_seed,
+                "project_name": hypar_project_name,
                 "explainability_schema": "archi3d.explanation.v1",
+                "plot_dimensions_m": {
+                    "width": float(parsed_input.get("plot_width_m", 0.0) or 0.0),
+                    "depth": float(parsed_input.get("plot_depth_m", 0.0) or 0.0),
+                    "area_sqm": round(
+                        float(parsed_input.get("plot_width_m", 0.0) or 0.0)
+                        * float(parsed_input.get("plot_depth_m", 0.0) or 0.0),
+                        3,
+                    ),
+                    "facing_direction": str(parsed_input.get("plot_facing_direction", "north") or "north"),
+                },
+                "buildable_footprint_m": footprint,
             },
         )
         hypar_json_path = write_hypar_json(
@@ -162,6 +221,32 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
             outputs_dir=outputs_dir,
             session_seed=session_seed,
         )
+        elements_ref_name = write_hypar_elements_reference_json(
+            layout_zones=layout_zones,
+            floor_height_m=bylaws.floor_height_m,
+            furniture_elements=furniture_elements,
+            metadata={
+                "region_id": bylaws.region_id,
+                "region_name": bylaws.region_name,
+                "building_type": bylaws.building_type,
+                "session_seed": session_seed,
+                "explainability_schema": "archi3d.explanation.v1",
+                "plot_dimensions_m": {
+                    "width": float(parsed_input.get("plot_width_m", 0.0) or 0.0),
+                    "depth": float(parsed_input.get("plot_depth_m", 0.0) or 0.0),
+                    "area_sqm": round(
+                        float(parsed_input.get("plot_width_m", 0.0) or 0.0)
+                        * float(parsed_input.get("plot_depth_m", 0.0) or 0.0),
+                        3,
+                    ),
+                    "facing_direction": str(parsed_input.get("plot_facing_direction", "north") or "north"),
+                },
+                "buildable_footprint_m": footprint,
+            },
+            outputs_dir=outputs_dir,
+            session_seed=session_seed,
+        )
+        parsed_input["_hypar_elements_reference_path"] = elements_ref_name
         hypar_submission = submit_hypar_payload(
             payload=hypar_payload,
             api_url=hypar_api_url,
@@ -176,6 +261,7 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         layout_notes=layout_notes,
         geometry_validation=geometry_validation,
         hypar_submission=hypar_submission,
+        design_brief=design_brief,
     )
 
     if not layout_zones:
@@ -189,6 +275,11 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
     parsed_input["_layout_metrics"] = layout_metrics
     parsed_input["_geometry_validation"] = geometry_validation
     parsed_input["_hypar_submission"] = hypar_submission
+    parsed_input["_design_brief"] = design_brief
+
+    elements_ref_path = ""
+    if isinstance(parsed_input, dict):
+        elements_ref_path = str(parsed_input.get("_hypar_elements_reference_path", "") or "")
 
     return {
         "region": bylaws.region_id,
@@ -199,9 +290,13 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         "retrieved_knowledge": retrieved_knowledge,
         "vastu_report": vastu_report,
         "layout_zones": layout_zones,
+        "furniture_elements": furniture_elements,
         "explanation": explanation,
+        "design_brief": design_brief,
+        "hypar_submission": hypar_submission,
         "glb_file_path": "",
         "hypar_json_path": hypar_json_path,
+        "hypar_elements_reference_path": elements_ref_path,
         "status": status,
         "requires_clarification": False,
         "error_message": "",

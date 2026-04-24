@@ -1,0 +1,13 @@
+{
+  "source": "wikipedia_architecture",
+  "visited_count": 1,
+  "saved_count": 0,
+  "skipped_count": 1,
+  "saved_pages": [],
+  "skipped_pages": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Architectural_plan",
+      "reason": "robots_disallowed"
+    }
+  ]
+}

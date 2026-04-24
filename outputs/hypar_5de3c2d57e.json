@@ -1,0 +1,85 @@
+{
+  "schema": "archi3d-hypar-concept/v1",
+  "generated_at": "2026-04-22T16:49:16.053854+00:00",
+  "metadata": {
+    "region_id": "india_mumbai",
+    "region_name": "India \u2014 Mumbai (DCPR 2034)",
+    "building_type": "residential",
+    "session_seed": "5de3c2d57e",
+    "project_name": "Design a 2-floor residential house in Mumbai on a 30 by 40 m",
+    "explainability_schema": "archi3d.explanation.v1"
+  },
+  "levels": [
+    {
+      "level": 0,
+      "elevation_m": 0.0,
+      "height_m": 3.0
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_1",
+      "room_type": "living_room",
+      "level": 0,
+      "orientation": "northwest",
+      "origin_m": [
+        0.0,
+        13.743,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ]
+    },
+    {
+      "id": "zone_2",
+      "room_type": "staircase",
+      "level": 0,
+      "orientation": "northeast",
+      "origin_m": [
+        10.914,
+        13.743,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ]
+    },
+    {
+      "id": "zone_3",
+      "room_type": "parking",
+      "level": 0,
+      "orientation": "southwest",
+      "origin_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ]
+    },
+    {
+      "id": "zone_4",
+      "room_type": "kitchen",
+      "level": 0,
+      "orientation": "southeast",
+      "origin_m": [
+        10.914,
+        0.0,
+        0.0
+      ],
+      "size_m": [
+        10.914,
+        13.743,
+        3.0
+      ]
+    }
+  ]
+}

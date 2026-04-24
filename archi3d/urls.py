@@ -26,7 +26,12 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from apps.health.views import LocalPlaygroundView
+
 urlpatterns = [
+    # Local prototype: open http://127.0.0.1:8000/ to try the design API from the browser
+    path("", LocalPlaygroundView.as_view(), name="local-playground"),
+
     # Django Admin — browse at http://localhost:8000/admin/
     # Run `python manage.py createsuperuser` to create a login
     path("admin/", admin.site.urls),

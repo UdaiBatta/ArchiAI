@@ -1,0 +1,10 @@
+{
+  "url": "https://allowed.example.com/start",
+  "title": "Start Page",
+  "text": "Creative Commons Attribution licensed architecture notes.",
+  "links": [
+    "https://allowed.example.com/next",
+    "https://blocked.example.com/x"
+  ],
+  "license": "cc-by"
+}
