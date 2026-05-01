@@ -191,3 +191,90 @@ Use the safety-first scraper to collect architecture pages into retriever-ready 
 Notes:
 - Scraper enforces domain allowlist and robots checks.
 - For prototype speed, this config does not enforce license filtering; tighten this before production.
+
+---
+
+## Roadmap — What's Pending
+
+The following items are the next planned implementation steps, in priority order. Dataset model training is intentionally deferred until all pre-dataset backend tasks are done.
+
+### Pre-Dataset Backend Tasks
+
+1. **Region and building-type scoped knowledge metadata expansion**
+   - Add per-region and per-building-type metadata files so the vectorless retriever returns more targeted bylaw and design knowledge.
+
+2. **Layout feasibility checks**
+   - Corridor width constraints
+   - Stair core continuity checks across floors
+   - Service shaft continuity checks
+
+3. **Structured explainability object (versioned JSON)**
+   - Replace free-text explanation with a versioned, machine-readable JSON schema in the API response so frontends can render it properly.
+
+4. **Hypar API integration test harness**
+   - Add mocked endpoint tests that exercise the full Hypar submission flow without a live Hypar account, to keep CI reliable.
+
+5. **Ingestion and scraper quality gates**
+   - Duplicate detection across ingested documents
+   - Source trust scoring
+   - Stricter citation normalisation before knowledge chunks are indexed
+
+### Deferred (Post-Dataset)
+
+- LLM fine-tuning / model training on collected architectural dataset
+- Larger bylaw corpus ingestion for more regions
+
+---
+
+## Platform / Website Plans
+
+**Hypar.io API availability** — Hypar currently requires per-account API tokens and its API is not freely accessible to all users. We have two parallel tracks:
+
+- **Track A — Hypar bridge (current):** When a Hypar API token is available, the bridge submits designs directly to Hypar via `POST /api/v1/design/hypar/auto-create/` or the background job endpoint. The CSV upload flow remains the simplest path without an API token.
+
+- **Track B — ArchiAI standalone platform:** If Hypar's API remains gated or unavailable for general use, we plan to build a **dedicated ArchiAI web platform** that hosts the full design-generation workflow directly. This would include:
+  - A browser-based UI for entering project requirements
+  - Real-time design generation and bylaw compliance feedback
+  - Built-in 3D/2D layout visualisation (no Hypar dependency)
+  - PDF report export and shareable project links
+  - User accounts, project history, and collaboration features
+
+Track B development will begin once the pre-dataset backend tasks above are complete and Hypar API access is evaluated. Both tracks share the same Django + DRF backend; only the frontend and submission layer differ.
+
+---
+
+## How We Plan to Build and Improve the Design Intelligence
+
+### 1 — Hypar Elements API for Geometry and Structures
+
+We intend to use the [Hypar Elements API](https://hypar-io.github.io/Elements/api/Elements.html) as the primary geometry layer for defining architectural structures. Elements provides a rich type system (`Space`, `Wall`, `Floor`, `Column`, `Beam`, `Roof`, etc.) that lets us express every room, structural member, and building component in a well-typed, version-controlled model rather than ad-hoc JSON blobs.
+
+Planned use:
+- Map each zone produced by the layout generator to a typed `Space` record with dimensions, level, and adjacency metadata.
+- Express walls, slabs, and structural grids as first-class Elements objects so they can be visualised, validated, and exported consistently.
+- Produce a serialized Elements `Model` (not just the hints file currently written) that can be loaded into any Elements-compatible viewer or downstream tool.
+- Use Elements as the single source of truth for geometry whether we submit to Hypar or render inside the ArchiAI platform (Track B above).
+
+### 2 — Architecture Books and Curated Knowledge as the Training Corpus
+
+Good design outputs depend on good design knowledge. We plan to build a structured knowledge pipeline that feeds the retriever and (eventually) model fine-tuning:
+
+**Architecture reference books and standards**
+- Ingest digitised architecture handbooks (e.g. Neufert, Time-Saver Standards, NBC/BIS codes) as chunked PDF documents via the existing `knowledge_ingestion.py` pipeline.
+- Each chunk is tagged with region, building type, topic (circulation, accessibility, structural, MEP, fire safety, etc.) so the vectorless retriever can return precisely scoped results.
+- Bylaw PDFs for additional Indian and international regions will be added incrementally as structured bylaw YAML files consumed by `bylaw_loader.py`.
+
+**Web scraper for live architectural knowledge**
+- The existing `safe_web_scraper.py` prototype (domain allowlist + robots.txt checks) will be extended to crawl trusted architecture knowledge sources (planning portals, open-access journals, municipal bylaw sites).
+- Each scraped page is chunked, deduplicated, and trust-scored before it enters `knowledge/raw/`.
+- License filtering will be tightened before any production crawl so only permissively licensed content is retained.
+- The combined scraped + ingested corpus forms the retrieval index that drives bylaw-aware, knowledge-grounded design explanations.
+
+### 3 — Manual Review and Iterative Design Improvement
+
+Automated generation is the starting point, not the final answer. We plan structured human-in-the-loop workflows:
+
+- **Manual knowledge curation:** Architects and domain experts can review, annotate, and override knowledge chunks in `knowledge/raw/` to correct errors or add nuance that scrapers miss.
+- **Design review layer:** Generated layouts and geometry outputs will be reviewable through the platform UI. Reviewers can flag zones, adjust dimensions, or override bylaw interpretations, and those decisions are stored as corrections that inform future generation.
+- **Feedback loop into retrieval:** Approved corrections are tagged and re-indexed so the retriever surfaces them in similar future requests, making the system progressively more accurate without requiring a full model retrain.
+- **Continuous bylaw updates:** As municipal codes change, bylaw YAML files can be updated manually and the compliance engine picks up the changes on the next server start — no model retraining needed for legal rule changes.
