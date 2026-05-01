@@ -191,3 +191,52 @@ Use the safety-first scraper to collect architecture pages into retriever-ready 
 Notes:
 - Scraper enforces domain allowlist and robots checks.
 - For prototype speed, this config does not enforce license filtering; tighten this before production.
+
+---
+
+## Roadmap — What's Pending
+
+The following items are the next planned implementation steps, in priority order. Dataset model training is intentionally deferred until all pre-dataset backend tasks are done.
+
+### Pre-Dataset Backend Tasks
+
+1. **Region and building-type scoped knowledge metadata expansion**
+   - Add per-region and per-building-type metadata files so the vectorless retriever returns more targeted bylaw and design knowledge.
+
+2. **Layout feasibility checks**
+   - Corridor width constraints
+   - Stair core continuity checks across floors
+   - Service shaft continuity checks
+
+3. **Structured explainability object (versioned JSON)**
+   - Replace free-text explanation with a versioned, machine-readable JSON schema in the API response so frontends can render it properly.
+
+4. **Hypar API integration test harness**
+   - Add mocked endpoint tests that exercise the full Hypar submission flow without a live Hypar account, to keep CI reliable.
+
+5. **Ingestion and scraper quality gates**
+   - Duplicate detection across ingested documents
+   - Source trust scoring
+   - Stricter citation normalisation before knowledge chunks are indexed
+
+### Deferred (Post-Dataset)
+
+- LLM fine-tuning / model training on collected architectural dataset
+- Larger bylaw corpus ingestion for more regions
+
+---
+
+## Platform / Website Plans
+
+**Hypar.io API availability** — Hypar currently requires per-account API tokens and its API is not freely accessible to all users. We have two parallel tracks:
+
+- **Track A — Hypar bridge (current):** When a Hypar API token is available, the bridge submits designs directly to Hypar via `POST /api/v1/design/hypar/auto-create/` or the background job endpoint. The CSV upload flow remains the simplest path without an API token.
+
+- **Track B — ArchiAI standalone platform:** If Hypar's API remains gated or unavailable for general use, we plan to build a **dedicated ArchiAI web platform** that hosts the full design-generation workflow directly. This would include:
+  - A browser-based UI for entering project requirements
+  - Real-time design generation and bylaw compliance feedback
+  - Built-in 3D/2D layout visualisation (no Hypar dependency)
+  - PDF report export and shareable project links
+  - User accounts, project history, and collaboration features
+
+Track B development will begin once the pre-dataset backend tasks above are complete and Hypar API access is evaluated. Both tracks share the same Django + DRF backend; only the frontend and submission layer differ.
