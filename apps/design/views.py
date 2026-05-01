@@ -44,6 +44,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from uuid import uuid4
 from django.conf import settings
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from apps.design.models import DesignSession, OperationJob
 from apps.design.serializers import (
@@ -103,6 +105,45 @@ def _inject_runtime_hypar_credentials(request, pipeline_input: dict) -> None:
         pipeline_input["_hypar_api_token"] = api_token
 
 
+def _build_progress_callback(job_id):
+    if not job_id:
+        return None
+
+    channel_layer = get_channel_layer()
+    if channel_layer is None:
+        return None
+
+    group_name = f"design_progress_{job_id}"
+
+    def _callback(stage: str, pct: int, message: str) -> None:
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                "type": "progress.update",
+                "stage": stage,
+                "pct": int(pct),
+                "message": message,
+            },
+        )
+
+    return _callback
+
+
+def _send_progress_terminal_event(job_id, payload: dict, event_type: str) -> None:
+    if not job_id:
+        return
+    channel_layer = get_channel_layer()
+    if channel_layer is None:
+        return
+    async_to_sync(channel_layer.group_send)(
+        f"design_progress_{job_id}",
+        {
+            "type": event_type,
+            **payload,
+        },
+    )
+
+
 def _extract_hypar_project_url(hypar_submission: dict) -> str:
     if not isinstance(hypar_submission, dict):
         return ""
@@ -159,11 +200,16 @@ class DesignCreateView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
+        job_id = data.get("job_id")
 
         try:
             pipeline_input = dict(data)
+            pipeline_input.pop("job_id", None)
             pipeline_input["_explicit_fields"] = list(request.data.keys())
             _inject_runtime_hypar_credentials(request, pipeline_input)
+            progress_callback = _build_progress_callback(job_id)
+            if progress_callback is not None:
+                pipeline_input["_progress_callback"] = progress_callback
             pipeline_result = run_design_pipeline(pipeline_input)
 
             # ── Step 2: Persist Session to Database ────────────────────────────
@@ -171,6 +217,16 @@ class DesignCreateView(APIView):
 
             # ── Step 3: Format & Return Response ──────────────────────────────
             response_serializer = DesignResponseSerializer(session)
+            _send_progress_terminal_event(
+                job_id,
+                {
+                    "stage": "complete",
+                    "pct": 100,
+                    "message": "Design generation complete.",
+                    "result": response_serializer.data,
+                },
+                "progress.complete",
+            )
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
         except FileNotFoundError as e:
@@ -190,6 +246,15 @@ class DesignCreateView(APIView):
                 region=request.data.get("region", "default"),
                 status="failed",
                 error_message=str(e),
+            )
+            _send_progress_terminal_event(
+                job_id,
+                {
+                    "stage": "error",
+                    "pct": 0,
+                    "error": str(e),
+                },
+                "progress.error",
             )
             return Response(
                 {

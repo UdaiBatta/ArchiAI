@@ -5,6 +5,37 @@ from apps.design.models import DesignSession, OperationJob
 
 @pytest.mark.integration
 @pytest.mark.django_db
+def test_design_api_accepts_job_id_and_completes_with_response(tmp_path, settings):
+    settings.ARCHI3D = {
+        **settings.ARCHI3D,
+        "OUTPUTS_DIR": tmp_path,
+    }
+
+    client = APIClient()
+    response = client.post(
+        "/api/v1/design/",
+        {
+            "job_id": "11111111-1111-1111-1111-111111111111",
+            "raw_text": "Design a 2-floor residential house in Mumbai on a 30x40 metre plot with parking.",
+            "region": "india_mumbai",
+            "building_type": "residential",
+            "plot_width_m": 30,
+            "plot_depth_m": 40,
+            "num_floors": 2,
+            "num_units": 1,
+            "plot_facing_direction": "north",
+            "preferences": {"parking": True},
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["status"] in {"completed", "compliance_checked", "layout_generated"}
+
+
+@pytest.mark.integration
+@pytest.mark.django_db
 def test_design_api_surfaces_clarification_for_sparse_request(tmp_path, settings):
     settings.ARCHI3D = {
         **settings.ARCHI3D,

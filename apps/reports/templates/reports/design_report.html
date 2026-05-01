@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ project_title }} - Design Report</title>
+</head>
+<body>
+  <header>
+    <h1>{{ project_title }}</h1>
+    <p>Owner: {{ owner_name }}</p>
+    <p>Region: {{ region }} | Building type: {{ building_type }}</p>
+    <p>Revision: {{ revision_label }}</p>
+  </header>
+
+  <section>
+    <h2>Project Requirements</h2>
+    <p>{{ requirements_summary }}</p>
+  </section>
+
+  <section>
+    <h2>Bylaw Compliance</h2>
+    {{ compliance_table_html|safe }}
+  </section>
+
+  <section>
+    <h2>Floor-by-Floor Zone Breakdown</h2>
+    {{ zone_table_html|safe }}
+  </section>
+
+  <section>
+    <h2>Layout Snapshot</h2>
+    <p>Embedded snapshot is rendered in the generated PDF.</p>
+  </section>
+
+  <section>
+    <h2>Vastu Evaluation</h2>
+    <p>{{ vastu_summary }}</p>
+  </section>
+
+  <section>
+    <h2>Explanation Narrative</h2>
+    <p>{{ explanation }}</p>
+  </section>
+
+  <section>
+    <h2>Appendix: Raw JSON Payload</h2>
+    <pre>{{ raw_json }}</pre>
+  </section>
+</body>
+</html>

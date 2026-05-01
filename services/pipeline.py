@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Any
+from typing import Callable, Dict, Any
 from uuid import uuid4
 
 from django.conf import settings
@@ -26,6 +26,19 @@ from services.vectorless_rag import (
 )
 
 
+ProgressCallback = Callable[[str, int, str], None]
+
+
+def _emit_progress(progress_callback: ProgressCallback | None, stage: str, pct: int, message: str) -> None:
+    if progress_callback is None:
+        return
+    try:
+        progress_callback(stage, int(pct), message)
+    except Exception:
+        # Progress reporting must never break generation.
+        return
+
+
 def _build_retrieval_query(parsed_input: Dict[str, Any]) -> str:
     parts = [
         str(parsed_input.get("raw_text", "") or ""),
@@ -35,6 +48,69 @@ def _build_retrieval_query(parsed_input: Dict[str, Any]) -> str:
         "vastu" if parsed_input.get("use_vastu") else "",
     ]
     return " ".join(part for part in parts if part).strip()
+
+
+def _coerce_manual_layout_zones(raw_zones: Any) -> list[dict]:
+    coerced_zones: list[dict] = []
+    if not isinstance(raw_zones, list):
+        return coerced_zones
+
+    for index, zone in enumerate(raw_zones):
+        if not isinstance(zone, dict):
+            continue
+
+        room_type = str(zone.get("room_type", "multi_use") or "multi_use").strip() or "multi_use"
+        zone_id = str(zone.get("id", "") or "").strip() or f"manual_zone_{index + 1}"
+
+        try:
+            floor = int(zone.get("floor", 0) or 0)
+        except (TypeError, ValueError):
+            floor = 0
+
+        try:
+            x = float(zone.get("x", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            x = 0.0
+
+        try:
+            y = float(zone.get("y", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            y = 0.0
+
+        try:
+            width_m = max(0.1, float(zone.get("width_m", 0.0) or 0.0))
+        except (TypeError, ValueError):
+            width_m = 0.1
+
+        try:
+            depth_m = max(0.1, float(zone.get("depth_m", 0.0) or 0.0))
+        except (TypeError, ValueError):
+            depth_m = 0.1
+
+        orientation = str(zone.get("orientation", "") or "").strip()
+        street_facing = bool(zone.get("street_facing", False))
+        target_area = zone.get("target_area_sqm")
+        area_sqm = zone.get("area_sqm")
+        if not isinstance(area_sqm, (int, float)):
+            area_sqm = round(width_m * depth_m, 2)
+
+        coerced_zone = {
+            "id": zone_id,
+            "room_type": room_type,
+            "floor": floor,
+            "slot_index": zone.get("slot_index", index),
+            "x": round(x, 3),
+            "y": round(y, 3),
+            "width_m": round(width_m, 3),
+            "depth_m": round(depth_m, 3),
+            "area_sqm": round(float(area_sqm), 2),
+            "orientation": orientation,
+            "street_facing": street_facing,
+            "target_area_sqm": target_area if isinstance(target_area, (int, float)) else round(float(area_sqm), 2),
+        }
+        coerced_zones.append(coerced_zone)
+
+    return coerced_zones
 
 
 def _clarification_only_response(
@@ -86,6 +162,8 @@ def _clarification_only_response(
 
 def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
     runtime_input = dict(input_data or {})
+    progress_callback = runtime_input.pop("_progress_callback", None)
+    manual_layout_zones = _coerce_manual_layout_zones(runtime_input.pop("layout_zones_override", []))
     runtime_hypar_api_url = str(
         runtime_input.pop("_hypar_api_url", runtime_input.pop("hypar_api_url", "")) or ""
     ).strip()
@@ -109,6 +187,7 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         ollama_model=ollama_model,
         ollama_host=ollama_host,
     )
+    _emit_progress(progress_callback, "parsing", 10, "Parsing requirements...")
 
     requires_clarification = bool(parser_meta.get("requires_clarification", False))
     if requires_clarification:
@@ -122,6 +201,7 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
     building_type = str(parsed_input.get("building_type", "residential") or "residential")
 
     bylaws = load_bylaws(region_id=region_id, building_type=building_type)
+    _emit_progress(progress_callback, "retrieval", 25, "Retrieving bylaw knowledge...")
 
     compliance_report = run_full_compliance(
         plot_width_m=float(parsed_input.get("plot_width_m", 30.0)),
@@ -130,6 +210,7 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         num_units=int(parsed_input.get("num_units", 1)),
         bylaws=bylaws,
     )
+    _emit_progress(progress_callback, "compliance", 45, "Running compliance checks...")
 
     retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=knowledge_raw_dir)
     retrieval_query = _build_retrieval_query(parsed_input)
@@ -147,10 +228,18 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         compliance_report=compliance_report.to_dict(),
         bylaws=bylaws,
     )
+    _emit_progress(progress_callback, "layout", 65, "Generating floor layout...")
     layout_zones = layout_result.get("zones", [])
     layout_notes = layout_result.get("layout_notes", [])
     layout_metrics = layout_result.get("layout_metrics", {})
     footprint = layout_result.get("footprint", {})
+
+    if manual_layout_zones:
+        layout_zones = manual_layout_zones
+        layout_notes = list(layout_notes)
+        layout_notes.append(
+            f"Manual layout override applied from the browser studio ({len(layout_zones)} zone(s))."
+        )
 
     # --- Furniture placement (Neufert + RPLAN-informed) ----------------------
     furniture_elements = place_furniture(
@@ -160,6 +249,7 @@ def run_design_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     geometry_validation = validate_layout_geometry(layout_zones)
+    _emit_progress(progress_callback, "geometry", 80, "Building 3D geometry...")
     if not geometry_validation.get("valid", False):
         layout_notes.append(
             "Geometry validation reported blocking overlap issues. Hypar export deferred until layout is corrected."

@@ -5,8 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description"
-    content="Archi3D API Workspace — AI-assisted architectural planning system. Run design pipelines, check bylaw compliance, and generate Hypar models.">
-  <title>Archi3D · API Workspace</title>
+    content="Archi3D Studio — AI-assisted architectural design platform for concepts, compliance, layout generation, and exports.">
+  <title>Archi3D · Studio</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1074,9 +1074,274 @@
     }
 
     /* ─────────────────────────────────────────────────────────────
-       RESPONSE PANEL
+       STUDIO EDITOR
        ───────────────────────────────────────────────────────────── */
-    .response-panel {}
+    .studio-panel {
+      margin-top: 0;
+      background:
+        radial-gradient(circle at top left, rgba(94, 245, 208, 0.04), transparent 30%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    }
+
+    .studio-panel .section-hint {
+      max-width: 72ch;
+    }
+
+    .studio-prompt-grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    @media (min-width: 980px) {
+      .studio-prompt-grid {
+        grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
+      }
+    }
+
+    .studio-editor-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .studio-canvas-card,
+    .studio-inspector {
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.025);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      padding: 14px;
+    }
+
+    .studio-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .studio-toolbar .field-inline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .studio-toolbar .btn-row {
+      gap: 8px;
+    }
+
+    .studio-canvas-wrap {
+      position: relative;
+      min-height: clamp(320px, 58vw, 520px);
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.016) 0%, rgba(7, 11, 24, 0.9) 100%),
+        radial-gradient(circle at 18% 0%, rgba(94, 245, 208, 0.08), transparent 30%),
+        radial-gradient(circle at 82% 100%, rgba(56, 189, 248, 0.08), transparent 28%),
+        #07101d;
+    }
+
+    .studio-layout-svg {
+      width: 100%;
+      height: clamp(320px, 58vw, 520px);
+      display: block;
+      touch-action: none;
+    }
+
+    .studio-layout-svg.is-dragging {
+      cursor: grabbing;
+    }
+
+    .studio-empty {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--ink-faint);
+      padding: 24px;
+      pointer-events: none;
+      font-size: 0.9rem;
+      letter-spacing: 0.01em;
+    }
+
+    .studio-canvas-caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 10px 2px 0;
+      color: var(--ink-faint);
+      font-size: 0.78rem;
+    }
+
+    .studio-canvas-caption strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .studio-details {
+      margin-top: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.02);
+      overflow: hidden;
+    }
+
+    .studio-details > summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .studio-details > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .studio-details > summary::after {
+      content: '+';
+      color: var(--ink-faint);
+      font-size: 0.95rem;
+    }
+
+    .studio-details[open] > summary::after {
+      content: '–';
+    }
+
+    .studio-details-body {
+      padding: 0 14px 14px;
+    }
+
+    .studio-zone-list {
+      display: grid;
+      gap: 8px;
+      max-height: 220px;
+      overflow: auto;
+      margin-top: 8px;
+    }
+
+    .studio-zone-card {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--ink);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color var(--duration-fast) var(--ease-out),
+        background-color var(--duration-fast) var(--ease-out),
+        transform var(--duration-fast) var(--ease-out);
+    }
+
+    .studio-zone-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(0, 212, 170, 0.24);
+      transform: translateY(-1px);
+    }
+
+    .studio-zone-card.is-active {
+      border-color: rgba(0, 212, 170, 0.42);
+      background: rgba(0, 212, 170, 0.08);
+    }
+
+    .studio-zone-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .studio-zone-meta {
+      margin-top: 3px;
+      color: var(--ink-faint);
+      font-size: 0.76rem;
+      line-height: 1.4;
+    }
+
+    .studio-zone-summary {
+      margin-top: 10px;
+      color: var(--ink-muted);
+      font-size: 0.82rem;
+    }
+
+    .studio-layout-json {
+      margin-top: 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(3, 8, 20, 0.58);
+      color: var(--teal-100);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      padding: 12px;
+      max-height: 240px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .studio-note {
+      margin-top: 10px;
+      color: var(--ink-faint);
+      font-size: 0.79rem;
+    }
+
+    .studio-zone-group {
+      cursor: grab;
+    }
+
+    .studio-zone-group.is-active .studio-zone-top {
+      filter: drop-shadow(0 10px 28px rgba(94, 245, 208, 0.16));
+    }
+
+    .studio-zone-top {
+      transition: filter var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+    }
+
+    .studio-zone-side,
+    .studio-zone-shadow {
+      pointer-events: none;
+    }
+
+    .studio-zone-handle {
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .reports-panel {
+      margin-top: 0;
+    }
+
+    .reports-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .report-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .report-status-note {
+      color: var(--ink-faint);
+      font-size: 0.82rem;
+    }
 
     .toolbar {
       display: flex;
@@ -1084,10 +1349,6 @@
       align-items: center;
       gap: 8px;
       margin-bottom: 14px;
-    }
-
-    .toolbar-spacer {
-      flex: 1;
     }
 
     /* JSON Viewer */
@@ -1354,6 +1615,27 @@
         width: 100%;
         justify-content: center;
       }
+
+      .studio-toolbar {
+        align-items: stretch;
+      }
+
+      .studio-toolbar .field-inline,
+      .studio-toolbar .btn-row {
+        width: 100%;
+      }
+
+      .studio-canvas-caption {
+        display: none;
+      }
+
+      .studio-canvas-wrap {
+        min-height: 320px;
+      }
+
+      .studio-layout-svg {
+        height: 320px;
+      }
     }
 
     /* ─────────────────────────────────────────────────────────────
@@ -1376,17 +1658,19 @@
     <header class="card hero">
       <div class="hero-inner">
         <div class="hero-text">
-          <div class="hero-badge">Phase 2 / 3 Prototype</div>
-          <h1>Archi3D API&nbsp;Workspace</h1>
+          <div class="hero-badge">Archi3D Studio</div>
+          <h1>Design your own architectural platform</h1>
           <p class="hero-sub">
-            AI-assisted architectural planning — bylaw compliance, conceptual layout generation,
-            Vastu integration, and Hypar export. Run design pipelines directly from this console.
+            AI-assisted architectural planning for concepts, bylaw compliance, layout generation,
+            Vastu-aware guidance, and export workflows. Use this console as the control room for Archi3D.
           </p>
           <nav class="hero-nav" aria-label="Quick links">
+            <a class="nav-pill" href="#workspace">🏛 Studio</a>
             <a class="nav-pill" href="/api/v1/health/">⚡ Health</a>
             <a class="nav-pill" href="/api/v1/design/list/">📋 Sessions</a>
             <a class="nav-pill" href="/admin/">🔧 Admin</a>
             <a class="nav-pill" href="/api/v1/design/jobs/">⚙ Jobs</a>
+            <a class="nav-pill" href="#reports-panel">🧾 Reports</a>
           </nav>
         </div>
 
@@ -1395,7 +1679,7 @@
             <div class="stat-icon teal">🏗</div>
             <div>
               <div class="stat-label">Engine</div>
-              <div class="stat-val">Bylaw + RAG + Vastu</div>
+              <div class="stat-val">Rules + layout + export</div>
             </div>
           </div>
           <div class="stat-card">
@@ -1410,15 +1694,15 @@
     </header>
 
     <!-- ── WORKSPACE ──────────────────────────────────────────────── -->
-    <div class="workspace">
+    <div class="workspace" id="workspace">
 
       <!-- LEFT PANEL — Design Request -->
       <section class="card panel" aria-labelledby="design-request-heading">
         <div class="section-head">
           <div class="section-icon">✏️</div>
           <div>
-            <h2 id="design-request-heading">Design Request</h2>
-            <p class="section-hint">Describe your project — plot dimensions and direction auto-detected from text, or set precisely below.</p>
+            <h2 id="design-request-heading">Studio Brief</h2>
+            <p class="section-hint">Describe the project you want to design. The platform can infer dimensions from text or use exact values below.</p>
           </div>
         </div>
 
@@ -1521,11 +1805,11 @@
               <div class="divider"></div>
 
               <div class="field">
-                <label for="hypar_api_url">Hypar API URL <span class="tip">(optional)</span></label>
-                <input type="url" id="hypar_api_url" placeholder="https://your-hypar-endpoint">
+                <label for="hypar_api_url">External export URL <span class="tip">(optional)</span></label>
+                <input type="url" id="hypar_api_url" placeholder="https://your-export-endpoint">
               </div>
               <div class="field">
-                <label for="hypar_api_token">Hypar API token <span class="tip">(optional)</span></label>
+                <label for="hypar_api_token">External export token <span class="tip">(optional)</span></label>
                 <input type="password" id="hypar_api_token" placeholder="Bearer token">
               </div>
 
@@ -1535,21 +1819,21 @@
 
         <!-- Actions -->
         <div class="btn-row">
-          <button class="btn-primary" type="button" id="auto-create" aria-label="Auto-create project in Hypar">
+          <button class="btn-primary" type="button" id="auto-create" aria-label="Create project in external platform">
             <span class="spinner" aria-hidden="true"></span>
-            <span class="btn-label">⚡ Auto-create in Hypar</span>
+            <span class="btn-label">⚡ Create external project</span>
           </button>
           <button class="btn-secondary" type="button" id="run" aria-label="Run design pipeline">
             <span class="spinner" aria-hidden="true"></span>
-            <span class="btn-label">▶ Run pipeline</span>
+            <span class="btn-label">▶ Run Archi3D pipeline</span>
           </button>
         </div>
 
         <div class="btn-fallback-row">
           <button type="button" id="bridge" class="btn-sm"
-            title="Manual Hypar package (fallback when auto-create unavailable)">
+            title="Manual export package (fallback when external submit is unavailable)">
             <span class="spinner" aria-hidden="true"></span>
-            <span class="btn-label">📦 Generate Hypar package</span>
+            <span class="btn-label">📦 Generate export package</span>
           </button>
         </div>
 
@@ -1563,62 +1847,13 @@
 
       </section>
 
-      <!-- RIGHT PANEL — Execution Snapshot -->
-      <section class="card panel" aria-labelledby="exec-snapshot-heading">
+      <!-- RIGHT PANEL — Project Notes -->
+      <section class="card panel" aria-labelledby="project-notes-heading">
         <div class="section-head">
-          <div class="section-icon blue">📊</div>
+          <div class="section-icon blue">🗂</div>
           <div>
-            <h2 id="exec-snapshot-heading">Execution Snapshot</h2>
-            <p class="section-hint">Live summary of last pipeline run.</p>
-          </div>
-        </div>
-
-        <!-- Metric cards -->
-        <div class="snapshot-grid">
-          <div class="metric-card">
-            <div class="metric-label">Endpoint</div>
-            <div class="metric-value" id="snap-endpoint">—</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">HTTP status</div>
-            <div class="metric-value" id="snap-http">—</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Pipeline</div>
-            <div class="metric-value" id="snap-pipeline">—</div>
-            <div class="metric-sub" id="snap-clarify"></div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Hypar</div>
-            <div class="metric-value" id="snap-hypar">—</div>
-            <div class="metric-sub" id="snap-hypar-reason"></div>
-          </div>
-        </div>
-
-        <!-- Pipeline stages -->
-        <div class="pipeline">
-          <div class="pipeline-label">Pipeline stages</div>
-          <div class="stages" id="timeline">
-            <div class="stage stage-pending" id="stage-parse">
-              <span class="stage-icon">🔍</span>
-              <span class="stage-name">Parse</span>
-              <span class="stage-note" id="stage-note-parse">pending</span>
-            </div>
-            <div class="stage stage-pending" id="stage-compliance">
-              <span class="stage-icon">⚖</span>
-              <span class="stage-name">Compliance</span>
-              <span class="stage-note" id="stage-note-compliance">pending</span>
-            </div>
-            <div class="stage stage-pending" id="stage-layout">
-              <span class="stage-icon">🗺</span>
-              <span class="stage-name">Layout</span>
-              <span class="stage-note" id="stage-note-layout">pending</span>
-            </div>
-            <div class="stage stage-pending" id="stage-hypar">
-              <span class="stage-icon">🏢</span>
-              <span class="stage-name">Hypar</span>
-              <span class="stage-note" id="stage-note-hypar">pending</span>
-            </div>
+            <h2 id="project-notes-heading">Project Notes</h2>
+            <p class="section-hint">A compact view of the latest concept, exports, and saved sessions.</p>
           </div>
         </div>
 
@@ -1636,9 +1871,9 @@
         <div class="info-box" id="artifact-box" hidden>
           <div class="info-box-head">
             <span>📁</span>
-            <span class="info-box-title">Hypar artifacts</span>
+            <span class="info-box-title">Export artifacts</span>
           </div>
-          <div class="info-box-hint">Manual fallback import assets — use only when direct auto-create is unavailable.
+          <div class="info-box-hint">Manual fallback export assets — use only when direct submit is unavailable.
           </div>
           <ul class="info-list" id="artifact-links" style="margin-top: 10px;"></ul>
         </div>
@@ -1659,29 +1894,164 @@
       </section>
     </div>
 
-    <!-- ── RESPONSE PANEL ──────────────────────────────────────────── -->
-    <section class="card panel response-panel" aria-labelledby="response-heading">
+        <div class="info-box teal-tint" style="margin: 0;">
+          <div class="info-box-head">
+            <span>✳</span>
+            <span class="info-box-title">How it works</span>
+          </div>
+          <div class="info-box-hint">
+            Generate the concept first, then drag the blocks to reposition them. Use the inspector only for fine tuning, and press <strong>Apply edited layout</strong> when the floor view feels right.
+          </div>
+          <div class="studio-note">
+            The goal is a minimal in-browser design loop: prompt, floor view, move, rerun.
+          </div>
+        </div>
+      </div>
+
+      <div class="studio-editor-grid">
+        <div class="studio-canvas-card">
+          <div class="studio-toolbar">
+            <div class="field-inline">
+              <label for="studio-floor-select" style="margin-bottom: 0;">Floor view</label>
+              <select id="studio-floor-select"></select>
+            </div>
+            <div class="btn-row" style="margin: 0;">
+              <button type="button" class="btn-sm btn-secondary" id="studio-reset-layout">Reset draft</button>
+              <button type="button" class="btn-sm btn-primary" id="studio-apply-layout">Apply edited layout</button>
+            </div>
+          </div>
+
+          <div class="studio-canvas-wrap">
+            <svg id="studio-layout-canvas" class="studio-layout-svg" role="img" aria-label="Editable architectural layout preview"></svg>
+            <div class="studio-empty" id="studio-layout-empty">Run the pipeline to generate a draft layout. The canvas will appear here.</div>
+          </div>
+
+          <div class="studio-canvas-caption">
+            <span><strong>Tip:</strong> drag any block to move it. The floor view scales to the available space, while the inspector keeps the numbers precise.</span>
+          </div>
+        </div>
+
+        <aside class="studio-inspector">
+          <div class="studio-zone-summary" id="studio-zone-summary">Select a room to edit it.</div>
+
+          <details class="studio-details" open>
+            <summary>Active room</summary>
+            <div class="studio-details-body">
+              <div class="field">
+                <label for="studio-zone-select">Select room</label>
+                <select id="studio-zone-select"></select>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label for="studio-zone-room-type">Room type</label>
+                  <input type="text" id="studio-zone-room-type" placeholder="living_room">
+                </div>
+                <div class="field">
+                  <label for="studio-zone-floor">Floor</label>
+                  <input type="number" id="studio-zone-floor" min="0" step="1">
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label for="studio-zone-x">X position (m)</label>
+                  <input type="number" id="studio-zone-x" min="0" step="0.1">
+                </div>
+                <div class="field">
+                  <label for="studio-zone-y">Y position (m)</label>
+                  <input type="number" id="studio-zone-y" min="0" step="0.1">
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label for="studio-zone-width">Width (m)</label>
+                  <input type="number" id="studio-zone-width" min="0.1" step="0.1">
+                </div>
+                <div class="field">
+                  <label for="studio-zone-depth">Depth (m)</label>
+                  <input type="number" id="studio-zone-depth" min="0.1" step="0.1">
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label for="studio-zone-orientation">Orientation</label>
+                  <input type="text" id="studio-zone-orientation" placeholder="northwest">
+                </div>
+                <div class="field">
+                  <label for="studio-zone-street-facing">Street facing</label>
+                  <select id="studio-zone-street-facing">
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="studio-details">
+            <summary>Other rooms</summary>
+            <div class="studio-details-body">
+              <div class="studio-zone-list" id="studio-zone-list" aria-label="Editable room list"></div>
+            </div>
+          </details>
+
+          <details class="studio-details">
+            <summary>Layout data</summary>
+            <div class="studio-details-body">
+              <pre class="studio-layout-json" id="studio-layout-json">No layout loaded yet.</pre>
+            </div>
+          </details>
+        </aside>
+      </div>
+    </section>
+
+    <section class="card panel reports-panel" id="reports-panel" aria-labelledby="reports-heading">
       <div class="section-head">
-        <div class="section-icon blue">📄</div>
+        <div class="section-icon">🧾</div>
         <div>
-          <h2 id="response-heading">API Response</h2>
-          <p class="section-hint">Full JSON payload from the last request.</p>
+          <h2 id="reports-heading">Report Exports</h2>
+          <p class="section-hint">Generate a PDF report or DXF export from any saved project revision.</p>
         </div>
       </div>
 
-      <div class="toolbar">
-        <button type="button" class="btn-sm" id="copy-request">📋 Copy request</button>
-        <button type="button" class="btn-sm" id="copy-response">📋 Copy response</button>
-        <span class="toolbar-spacer"></span>
-        <button type="button" class="btn-sm" id="clear-response" title="Clear response panel">✕ Clear</button>
-      </div>
-
-      <div class="json-viewer-wrap">
-        <div class="json-header">
-          <span class="json-lang-tag">JSON</span>
+      <div class="reports-grid">
+        <div class="field">
+          <label for="report_access_token">JWT access token <span class="tip">required</span></label>
+          <input type="password" id="report_access_token" placeholder="Paste an access token from /api/v1/auth/login/">
         </div>
-        <pre id="out"
-          aria-label="API response JSON">Click "Auto-create in Hypar" or "Run pipeline" to get started.</pre>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="report_revision_id">Revision ID <span class="tip">required</span></label>
+            <input type="number" id="report_revision_id" min="1" placeholder="e.g. 12">
+          </div>
+          <div class="field">
+            <label for="report_export_id">Report export ID <span class="tip">optional</span></label>
+            <input type="number" id="report_export_id" min="1" placeholder="e.g. 8">
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top: 4px;">
+          <button type="button" class="btn-sm btn-primary" id="create-report">Generate PDF</button>
+          <button type="button" class="btn-sm btn-secondary" id="refresh-report">Refresh status</button>
+          <button type="button" class="btn-sm btn-secondary" id="download-report">Download PDF</button>
+          <button type="button" class="btn-sm btn-secondary" id="download-dxf">Export DXF</button>
+        </div>
+
+        <div class="report-status-row">
+          <span class="pill pill-idle" id="report-status-pill">Idle</span>
+          <span class="report-status-note" id="report-status-note">Paste a token and revision ID, then generate a PDF or DXF.</span>
+        </div>
+
+        <div class="json-viewer-wrap">
+          <div class="json-header">
+            <span class="json-lang-tag">REPORT JSON</span>
+          </div>
+          <pre id="report-out" aria-label="Report export JSON">No report export requested yet.</pre>
+        </div>
       </div>
     </section>
 
@@ -1699,6 +2069,56 @@
       run: document.getElementById('run'),
       bridge: document.getElementById('bridge'),
     };
+
+    const reportControls = {
+      create: document.getElementById('create-report'),
+      refresh: document.getElementById('refresh-report'),
+      downloadPdf: document.getElementById('download-report'),
+      downloadDxf: document.getElementById('download-dxf'),
+    };
+
+    const reportFields = {
+      token: document.getElementById('report_access_token'),
+      revisionId: document.getElementById('report_revision_id'),
+      exportId: document.getElementById('report_export_id'),
+      statusPill: document.getElementById('report-status-pill'),
+      statusNote: document.getElementById('report-status-note'),
+      output: document.getElementById('report-out'),
+    };
+
+    const studioControls = {
+      promptTemplate: document.getElementById('prompt-template'),
+      loadPromptTemplate: document.getElementById('load-prompt-template'),
+      copyPromptTemplate: document.getElementById('copy-prompt-template'),
+      floorSelect: document.getElementById('studio-floor-select'),
+      zoneSelect: document.getElementById('studio-zone-select'),
+      zoneRoomType: document.getElementById('studio-zone-room-type'),
+      zoneFloor: document.getElementById('studio-zone-floor'),
+      zoneX: document.getElementById('studio-zone-x'),
+      zoneY: document.getElementById('studio-zone-y'),
+      zoneWidth: document.getElementById('studio-zone-width'),
+      zoneDepth: document.getElementById('studio-zone-depth'),
+      zoneOrientation: document.getElementById('studio-zone-orientation'),
+      zoneStreetFacing: document.getElementById('studio-zone-street-facing'),
+      zoneList: document.getElementById('studio-zone-list'),
+      zoneSummary: document.getElementById('studio-zone-summary'),
+      layoutJson: document.getElementById('studio-layout-json'),
+      canvas: document.getElementById('studio-layout-canvas'),
+      empty: document.getElementById('studio-layout-empty'),
+      applyLayout: document.getElementById('studio-apply-layout'),
+      resetLayout: document.getElementById('studio-reset-layout'),
+    };
+
+    let lastReportExport = null;
+    let studioBaseLayoutZones = [];
+    let studioDraftLayoutZones = [];
+    let studioSelectedZoneId = '';
+    let studioSelectedFloor = '';
+
+    const storedReportToken = window.localStorage.getItem('archi3d_report_access_token') || '';
+    if (reportFields.token) {
+      reportFields.token.value = storedReportToken;
+    }
 
     /* ════════════════════════════════════════════════════════════════
        CHAR COUNTER
@@ -1776,11 +2196,717 @@
       Object.values(buttons).forEach(b => setBusy(b, isBusy));
     }
 
+    function setReportStatus(kind, note) {
+      const labels = {
+        'pill-run': 'Working',
+        'pill-ok': 'Ready',
+        'pill-warn': 'Waiting',
+        'pill-bad': 'Error',
+        'pill-idle': 'Idle',
+      };
+      reportFields.statusPill.className = 'pill ' + kind;
+      reportFields.statusPill.textContent = labels[kind] || kind;
+      reportFields.statusNote.textContent = note;
+    }
+
+    function setReportBusy(isBusy) {
+      Object.values(reportControls).forEach(btn => setBusy(btn, isBusy));
+    }
+
+    function cloneStudioZones(zones) {
+      return JSON.parse(JSON.stringify(Array.isArray(zones) ? zones : []));
+    }
+
+    function getStudioFloorNumbers(zones) {
+      return Array.from(new Set((zones || []).map(zone => Number(zone.floor || 0)))).sort((a, b) => a - b);
+    }
+
+    function getStudioRoomLabel(roomType) {
+      return String(roomType || 'space').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    function getStudioRoomColor(roomType) {
+      const colors = {
+        living_room: '#38bdf8',
+        kitchen: '#f59e0b',
+        bedroom: '#5ef5d0',
+        master_room: '#00d4aa',
+        bathroom: '#a78bfa',
+        staircase: '#f43f5e',
+        parking: '#00c2e0',
+        dining_room: '#10b981',
+        balcony: '#8b95b8',
+        entrance: '#60a5fa',
+        multi_use: '#8b95b8',
+      };
+      return colors[String(roomType || '').toLowerCase()] || '#8b95b8';
+    }
+
+    function getStudioCanvasMetrics() {
+      const canvas = studioControls.canvas;
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(320, rect.width || 320);
+      const height = Math.max(320, rect.height || 320);
+      const margin = 28;
+      const zones = studioDraftLayoutZones.length ? studioDraftLayoutZones : [];
+      const maxX = Math.max(...zones.map(zone => Number(zone.x || 0) + Number(zone.width_m || 0)), 1);
+      const maxY = Math.max(...zones.map(zone => Number(zone.y || 0) + Number(zone.depth_m || 0)), 1);
+      const paddedWidth = maxX + Math.max(2, maxX * 0.08);
+      const paddedHeight = maxY + Math.max(2, maxY * 0.08);
+      const scale = Math.min((width - margin * 2) / paddedWidth, (height - margin * 2) / paddedHeight);
+      const offsetX = margin + ((width - margin * 2) - paddedWidth * scale) / 2;
+      const offsetY = margin + ((height - margin * 2) - paddedHeight * scale) / 2;
+      return { canvas, rect, width, height, margin, scale, offsetX, offsetY, paddedWidth, paddedHeight };
+    }
+
+    function getStudioClientPoint(event, metrics) {
+      if (!metrics.rect.width || !metrics.rect.height) {
+        return { x: 0, y: 0 };
+      }
+      const svgX = (event.clientX - metrics.rect.left) * (metrics.width / metrics.rect.width);
+      const svgY = (event.clientY - metrics.rect.top) * (metrics.height / metrics.rect.height);
+      return {
+        x: (svgX - metrics.offsetX) / metrics.scale,
+        y: (svgY - metrics.offsetY) / metrics.scale,
+      };
+    }
+
+    function beginStudioZoneDrag(zoneId, event) {
+      if (!event || event.button !== 0) return;
+      const targetZone = studioDraftLayoutZones.find(zone => String(zone.id) === String(zoneId));
+      if (!targetZone) return;
+
+      studioSelectedZoneId = String(targetZone.id);
+      studioSelectedFloor = String(targetZone.floor);
+      studioControls.floorSelect.value = studioSelectedFloor;
+      studioControls.zoneSelect.value = studioSelectedZoneId;
+      syncStudioInspectorFromSelection();
+
+      const metrics = getStudioCanvasMetrics();
+      const pointer = getStudioClientPoint(event, metrics);
+
+      studioDragState = {
+        zoneId: String(targetZone.id),
+        startPointerX: pointer.x,
+        startPointerY: pointer.y,
+        startZoneX: Number(targetZone.x || 0),
+        startZoneY: Number(targetZone.y || 0),
+        moved: false,
+      };
+
+      studioControls.canvas.classList.add('is-dragging');
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    function getStudioZoneAtPoint(point) {
+      const visibleZones = getStudioVisibleZones();
+      for (let index = visibleZones.length - 1; index >= 0; index -= 1) {
+        const zone = visibleZones[index];
+        const x = Number(zone.x || 0);
+        const y = Number(zone.y || 0);
+        const width = Number(zone.width_m || 0);
+        const depth = Number(zone.depth_m || 0);
+        if (point.x >= x && point.x <= x + width && point.y >= y && point.y <= y + depth) {
+          return zone;
+        }
+      }
+      return null;
+    }
+
+    function handleStudioCanvasPointerDown(event) {
+      if (!event || event.button !== 0) return;
+      const metrics = getStudioCanvasMetrics();
+      const point = getStudioClientPoint(event, metrics);
+      const zone = getStudioZoneAtPoint(point);
+      if (!zone) return;
+      beginStudioZoneDrag(zone.id, event);
+    }
+
+    function updateStudioZoneDrag(event) {
+      if (!studioDragState) return;
+      const zone = studioDraftLayoutZones.find(item => String(item.id) === String(studioDragState.zoneId));
+      if (!zone) return;
+
+      const metrics = getStudioCanvasMetrics();
+      const pointer = getStudioClientPoint(event, metrics);
+      const deltaX = pointer.x - studioDragState.startPointerX;
+      const deltaY = pointer.y - studioDragState.startPointerY;
+
+      zone.x = Math.max(0, Number((studioDragState.startZoneX + deltaX).toFixed(3)));
+      zone.y = Math.max(0, Number((studioDragState.startZoneY + deltaY).toFixed(3)));
+      zone.area_sqm = Number((Number(zone.width_m || 0) * Number(zone.depth_m || 0)).toFixed(2));
+
+      studioDragState.moved = true;
+      studioControls.zoneX.value = zone.x;
+      studioControls.zoneY.value = zone.y;
+      studioControls.layoutJson.textContent = JSON.stringify(studioDraftLayoutZones, null, 2);
+      renderStudioCanvas();
+      renderStudioZoneCards();
+      syncStudioInspectorFromSelection();
+    }
+
+    function endStudioZoneDrag() {
+      if (!studioDragState) return;
+      studioControls.canvas.classList.remove('is-dragging');
+      studioDragState = null;
+    }
+
+    function getStudioSelectedZone() {
+      return studioDraftLayoutZones.find(zone => String(zone.id) === String(studioSelectedZoneId)) || null;
+    }
+
+    function getStudioVisibleZones() {
+      if (!studioSelectedFloor && studioDraftLayoutZones.length > 0) {
+        const floors = getStudioFloorNumbers(studioDraftLayoutZones);
+        studioSelectedFloor = String(floors[0]);
+      }
+
+      if (!studioSelectedFloor) {
+        return [];
+      }
+
+      return studioDraftLayoutZones.filter(zone => String(zone.floor) === String(studioSelectedFloor));
+    }
+
+    function refreshStudioFloorSelect() {
+      const floors = getStudioFloorNumbers(studioDraftLayoutZones);
+      const previousFloor = studioSelectedFloor;
+
+      studioControls.floorSelect.innerHTML = '';
+      if (floors.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No floors yet';
+        studioControls.floorSelect.appendChild(option);
+        studioControls.floorSelect.disabled = true;
+        studioSelectedFloor = '';
+        return;
+      }
+
+      studioControls.floorSelect.disabled = false;
+      floors.forEach(floor => {
+        const option = document.createElement('option');
+        option.value = String(floor);
+        option.textContent = 'Floor ' + floor;
+        studioControls.floorSelect.appendChild(option);
+      });
+
+      if (previousFloor && floors.some(floor => String(floor) === String(previousFloor))) {
+        studioSelectedFloor = String(previousFloor);
+      } else {
+        studioSelectedFloor = String(floors[0]);
+      }
+
+      studioControls.floorSelect.value = studioSelectedFloor;
+    }
+
+    function refreshStudioZoneSelect() {
+      const visibleZones = getStudioVisibleZones();
+      const previousSelection = studioSelectedZoneId;
+      studioControls.zoneSelect.innerHTML = '';
+
+      if (visibleZones.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No rooms on this floor';
+        studioControls.zoneSelect.appendChild(option);
+        studioControls.zoneSelect.disabled = true;
+        studioSelectedZoneId = '';
+        return;
+      }
+
+      studioControls.zoneSelect.disabled = false;
+      visibleZones.forEach(zone => {
+        const option = document.createElement('option');
+        option.value = String(zone.id);
+        option.textContent = getStudioRoomLabel(zone.room_type) + ' · ' + Number(zone.width_m || 0).toFixed(1) + 'm × ' + Number(zone.depth_m || 0).toFixed(1) + 'm';
+        studioControls.zoneSelect.appendChild(option);
+      });
+
+      if (previousSelection && visibleZones.some(zone => String(zone.id) === String(previousSelection))) {
+        studioSelectedZoneId = String(previousSelection);
+      } else {
+        studioSelectedZoneId = String(visibleZones[0].id);
+      }
+
+      studioControls.zoneSelect.value = studioSelectedZoneId;
+    }
+
+    function syncStudioInspectorFromSelection() {
+      const selectedZone = getStudioSelectedZone();
+      if (!selectedZone) {
+        studioControls.zoneSummary.textContent = 'Select a room to edit it.';
+        studioControls.layoutJson.textContent = studioDraftLayoutZones.length ? JSON.stringify(studioDraftLayoutZones, null, 2) : 'No layout loaded yet.';
+        return;
+      }
+
+      studioControls.zoneRoomType.value = selectedZone.room_type || '';
+      studioControls.zoneFloor.value = selectedZone.floor ?? 0;
+      studioControls.zoneX.value = selectedZone.x ?? 0;
+      studioControls.zoneY.value = selectedZone.y ?? 0;
+      studioControls.zoneWidth.value = selectedZone.width_m ?? 0;
+      studioControls.zoneDepth.value = selectedZone.depth_m ?? 0;
+      studioControls.zoneOrientation.value = selectedZone.orientation || '';
+      studioControls.zoneStreetFacing.value = selectedZone.street_facing ? 'true' : 'false';
+
+      studioControls.zoneSummary.textContent =
+        getStudioRoomLabel(selectedZone.room_type) +
+        ' on floor ' + selectedZone.floor +
+        ' · area ' + Number(selectedZone.area_sqm || 0).toFixed(2) + ' sqm';
+      studioControls.layoutJson.textContent = JSON.stringify(studioDraftLayoutZones, null, 2);
+    }
+
+    function renderStudioZoneCards() {
+      const visibleZones = getStudioVisibleZones();
+      studioControls.zoneList.innerHTML = '';
+
+      if (visibleZones.length === 0) {
+        studioControls.zoneList.innerHTML = '<div class="studio-note">No rooms on this floor yet.</div>';
+        return;
+      }
+
+      visibleZones.forEach(zone => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'studio-zone-card' + (String(zone.id) === String(studioSelectedZoneId) ? ' is-active' : '');
+        button.innerHTML =
+          '<div class="studio-zone-title">' + getStudioRoomLabel(zone.room_type) + '</div>' +
+          '<div class="studio-zone-meta">Floor ' + zone.floor + ' · ' + Number(zone.width_m || 0).toFixed(1) + 'm × ' + Number(zone.depth_m || 0).toFixed(1) + 'm · x ' + Number(zone.x || 0).toFixed(1) + ', y ' + Number(zone.y || 0).toFixed(1) + '</div>';
+        button.addEventListener('click', () => {
+          studioSelectedZoneId = String(zone.id);
+          studioSelectedFloor = String(zone.floor);
+          studioControls.floorSelect.value = studioSelectedFloor;
+          studioControls.zoneSelect.value = studioSelectedZoneId;
+          syncStudioInspectorFromSelection();
+          renderStudioCanvas();
+          renderStudioZoneCards();
+        });
+        studioControls.zoneList.appendChild(button);
+      });
+    }
+
+    function renderStudioCanvas() {
+      const metrics = getStudioCanvasMetrics();
+      const canvas = metrics.canvas;
+      const visibleZones = getStudioVisibleZones();
+      const gridStep = 2;
+      const depthOffset = Math.max(6, Math.min(14, metrics.scale * 0.28));
+
+      canvas.setAttribute('viewBox', '0 0 ' + metrics.width + ' ' + metrics.height);
+      canvas.innerHTML = '';
+
+      if (visibleZones.length === 0) {
+        studioControls.empty.hidden = false;
+        return;
+      }
+
+      studioControls.empty.hidden = true;
+
+      const floorPlate = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      floorPlate.setAttribute('x', String(metrics.offsetX));
+      floorPlate.setAttribute('y', String(metrics.offsetY));
+      floorPlate.setAttribute('width', String(metrics.paddedWidth * metrics.scale));
+      floorPlate.setAttribute('height', String(metrics.paddedHeight * metrics.scale));
+      floorPlate.setAttribute('rx', '22');
+      floorPlate.setAttribute('fill', 'rgba(255,255,255,0.012)');
+      floorPlate.setAttribute('stroke', 'rgba(255,255,255,0.06)');
+      floorPlate.setAttribute('stroke-width', '1');
+      canvas.appendChild(floorPlate);
+
+      for (let x = 0; x <= metrics.paddedWidth + 0.01; x += gridStep) {
+        const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        const px = metrics.offsetX + x * metrics.scale;
+        gridLine.setAttribute('x1', String(px));
+        gridLine.setAttribute('y1', String(metrics.offsetY));
+        gridLine.setAttribute('x2', String(px));
+        gridLine.setAttribute('y2', String(metrics.offsetY + metrics.paddedHeight * metrics.scale));
+        gridLine.setAttribute('stroke', 'rgba(255, 255, 255, 0.03)');
+        gridLine.setAttribute('stroke-width', '1');
+        canvas.appendChild(gridLine);
+      }
+
+      for (let y = 0; y <= metrics.paddedHeight + 0.01; y += gridStep) {
+        const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        const py = metrics.offsetY + y * metrics.scale;
+        gridLine.setAttribute('x1', String(metrics.offsetX));
+        gridLine.setAttribute('y1', String(py));
+        gridLine.setAttribute('x2', String(metrics.offsetX + metrics.paddedWidth * metrics.scale));
+        gridLine.setAttribute('y2', String(py));
+        gridLine.setAttribute('stroke', 'rgba(255, 255, 255, 0.03)');
+        gridLine.setAttribute('stroke-width', '1');
+        canvas.appendChild(gridLine);
+      }
+
+      visibleZones.forEach(zone => {
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.classList.add('studio-zone-group');
+        const zoneColor = getStudioRoomColor(zone.room_type);
+        const isActive = String(zone.id) === String(studioSelectedZoneId);
+
+        if (isActive) {
+          group.classList.add('is-active');
+        }
+
+        const x = metrics.offsetX + Number(zone.x || 0) * metrics.scale;
+        const y = metrics.offsetY + Number(zone.y || 0) * metrics.scale;
+        const zoneWidth = Number(zone.width_m || 0) * metrics.scale;
+        const zoneDepth = Number(zone.depth_m || 0) * metrics.scale;
+
+        const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        shadow.classList.add('studio-zone-shadow');
+        shadow.setAttribute('x', String(x + depthOffset + 2));
+        shadow.setAttribute('y', String(y + depthOffset + 4));
+        shadow.setAttribute('width', String(zoneWidth));
+        shadow.setAttribute('height', String(zoneDepth));
+        shadow.setAttribute('rx', '16');
+        shadow.setAttribute('fill', 'rgba(0,0,0,0.18)');
+
+        const sideFace = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        sideFace.classList.add('studio-zone-side');
+        sideFace.setAttribute('d', 'M ' + (x + zoneWidth) + ' ' + y + ' L ' + (x + zoneWidth + depthOffset) + ' ' + (y + depthOffset) + ' L ' + (x + zoneWidth + depthOffset) + ' ' + (y + zoneDepth + depthOffset) + ' L ' + (x + zoneWidth) + ' ' + (y + zoneDepth) + ' Z');
+        sideFace.setAttribute('fill', zoneColor + '20');
+        sideFace.setAttribute('stroke', 'rgba(255,255,255,0.04)');
+        sideFace.setAttribute('stroke-width', '1');
+
+        const blockBody = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        blockBody.classList.add('studio-zone-top');
+        blockBody.setAttribute('x', String(x));
+        blockBody.setAttribute('y', String(y));
+        blockBody.setAttribute('width', String(zoneWidth));
+        blockBody.setAttribute('height', String(zoneDepth));
+        blockBody.setAttribute('rx', '16');
+        blockBody.setAttribute('fill', zoneColor + '26');
+        blockBody.setAttribute('stroke', isActive ? zoneColor : 'rgba(255,255,255,0.16)');
+        blockBody.setAttribute('stroke-width', isActive ? '2.5' : '1.5');
+        blockBody.setAttribute('cursor', 'grab');
+
+        const handle = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        handle.classList.add('studio-zone-handle');
+        handle.setAttribute('x', String(x + 12));
+        handle.setAttribute('y', String(y + 12));
+        handle.setAttribute('width', String(Math.max(28, zoneWidth * 0.18)));
+        handle.setAttribute('height', '6');
+        handle.setAttribute('rx', '3');
+        handle.setAttribute('fill', 'rgba(255,255,255,0.22)');
+
+        const hitbox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        hitbox.setAttribute('x', String(x));
+        hitbox.setAttribute('y', String(y));
+        hitbox.setAttribute('width', String(zoneWidth));
+        hitbox.setAttribute('height', String(zoneDepth));
+        hitbox.setAttribute('rx', '16');
+        hitbox.setAttribute('fill', 'transparent');
+        hitbox.setAttribute('stroke', 'transparent');
+
+        hitbox.addEventListener('pointerdown', event => beginStudioZoneDrag(zone.id, event));
+        hitbox.addEventListener('mousedown', event => beginStudioZoneDrag(zone.id, event));
+        blockBody.addEventListener('pointerdown', event => beginStudioZoneDrag(zone.id, event));
+        blockBody.addEventListener('mousedown', event => beginStudioZoneDrag(zone.id, event));
+        group.addEventListener('pointerdown', event => beginStudioZoneDrag(zone.id, event));
+        group.addEventListener('mousedown', event => beginStudioZoneDrag(zone.id, event));
+
+        group.addEventListener('click', () => {
+          studioSelectedZoneId = String(zone.id);
+          studioSelectedFloor = String(zone.floor);
+          studioControls.floorSelect.value = studioSelectedFloor;
+          studioControls.zoneSelect.value = studioSelectedZoneId;
+          syncStudioInspectorFromSelection();
+          renderStudioCanvas();
+          renderStudioZoneCards();
+        });
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', String(x + 12));
+        label.setAttribute('y', String(y + 22));
+        label.setAttribute('fill', '#f0f4ff');
+        label.setAttribute('font-size', '13');
+        label.setAttribute('font-weight', '700');
+        label.textContent = getStudioRoomLabel(zone.room_type);
+
+        const detail = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        detail.setAttribute('x', String(x + 12));
+        detail.setAttribute('y', String(y + 42));
+        detail.setAttribute('fill', 'rgba(240, 244, 255, 0.7)');
+        detail.setAttribute('font-size', '11');
+        detail.textContent = Number(zone.width_m || 0).toFixed(1) + 'm × ' + Number(zone.depth_m || 0).toFixed(1) + 'm';
+
+        group.appendChild(shadow);
+        group.appendChild(sideFace);
+        group.appendChild(blockBody);
+        group.appendChild(hitbox);
+        group.appendChild(handle);
+        group.appendChild(label);
+        group.appendChild(detail);
+        canvas.appendChild(group);
+      });
+    }
+
+    function syncStudioLayoutFromPayload(payload) {
+      const zones = Array.isArray(payload && payload.layout_zones) ? payload.layout_zones : [];
+      studioBaseLayoutZones = cloneStudioZones(zones);
+      studioDraftLayoutZones = cloneStudioZones(zones);
+      studioSelectedZoneId = zones.length ? String(zones[0].id) : '';
+      studioSelectedFloor = zones.length ? String(zones[0].floor) : '';
+      refreshStudioFloorSelect();
+      refreshStudioZoneSelect();
+      renderStudioCanvas();
+      renderStudioZoneCards();
+      syncStudioInspectorFromSelection();
+    }
+
+    function resetStudioDraft() {
+      studioDraftLayoutZones = cloneStudioZones(studioBaseLayoutZones);
+      studioSelectedZoneId = studioDraftLayoutZones.length ? String(studioDraftLayoutZones[0].id) : '';
+      studioSelectedFloor = studioDraftLayoutZones.length ? String(studioDraftLayoutZones[0].floor) : '';
+      refreshStudioFloorSelect();
+      refreshStudioZoneSelect();
+      renderStudioCanvas();
+      renderStudioZoneCards();
+      syncStudioInspectorFromSelection();
+      setReportStatus('pill-idle', 'Draft layout reset to the last generated version.');
+    }
+
+    function syncStudioSelectedZoneFromInspector() {
+      const selectedZone = getStudioSelectedZone();
+      if (!selectedZone) return;
+
+      const floorValue = parseInt(studioControls.zoneFloor.value, 10);
+      const xValue = parseFloat(studioControls.zoneX.value);
+      const yValue = parseFloat(studioControls.zoneY.value);
+      const widthValue = parseFloat(studioControls.zoneWidth.value);
+      const depthValue = parseFloat(studioControls.zoneDepth.value);
+      const orientationValue = String(studioControls.zoneOrientation.value || '').trim();
+      const streetFacingValue = studioControls.zoneStreetFacing.value === 'true';
+
+      selectedZone.room_type = String(studioControls.zoneRoomType.value || selectedZone.room_type || 'space').trim() || 'space';
+      if (!Number.isNaN(floorValue)) selectedZone.floor = floorValue;
+      if (!Number.isNaN(xValue)) selectedZone.x = Number(xValue.toFixed(3));
+      if (!Number.isNaN(yValue)) selectedZone.y = Number(yValue.toFixed(3));
+      if (!Number.isNaN(widthValue)) selectedZone.width_m = Math.max(0.1, Number(widthValue.toFixed(3)));
+      if (!Number.isNaN(depthValue)) selectedZone.depth_m = Math.max(0.1, Number(depthValue.toFixed(3)));
+      selectedZone.orientation = orientationValue;
+      selectedZone.street_facing = streetFacingValue;
+      selectedZone.area_sqm = Number((selectedZone.width_m * selectedZone.depth_m).toFixed(2));
+      selectedZone.target_area_sqm = Number((selectedZone.target_area_sqm || selectedZone.area_sqm).toFixed(2));
+
+      if (String(selectedZone.floor) !== String(studioSelectedFloor)) {
+        studioSelectedFloor = String(selectedZone.floor);
+        studioControls.floorSelect.value = studioSelectedFloor;
+      }
+
+      studioControls.layoutJson.textContent = JSON.stringify(studioDraftLayoutZones, null, 2);
+      refreshStudioZoneSelect();
+      renderStudioCanvas();
+      renderStudioZoneCards();
+      syncStudioInspectorFromSelection();
+    }
+
+    function applyStudioDraftToPipeline() {
+      if (!studioDraftLayoutZones.length) {
+        showToast('Generate a layout first, then edit it.', 'warn');
+        return;
+      }
+      runEndpoint('/api/v1/design/', 'Applying edited layout…', {
+        layout_zones_override: studioDraftLayoutZones,
+      });
+    }
+
+    function syncReportToken() {
+      const token = String(reportFields.token.value || '').trim();
+      if (token) {
+        window.localStorage.setItem('archi3d_report_access_token', token);
+      } else {
+        window.localStorage.removeItem('archi3d_report_access_token');
+      }
+    }
+
+    if (reportFields.token) {
+      reportFields.token.addEventListener('input', syncReportToken);
+    }
+
+    function getReportAuthHeaders() {
+      const token = String(reportFields.token.value || '').trim();
+      if (!token) return null;
+      return { 'Authorization': 'Bearer ' + token };
+    }
+
+    function reportExportToText(exportData) {
+      if (!exportData) return 'No report export requested yet.';
+      return JSON.stringify(exportData, null, 2);
+    }
+
+    function renderReportExport(exportData, note) {
+      lastReportExport = exportData || null;
+      if (exportData && exportData.id && reportFields.exportId) {
+        reportFields.exportId.value = exportData.id;
+      }
+      reportFields.output.textContent = reportExportToText(exportData);
+      if (note) {
+        setReportStatus(exportData && exportData.status === 'ready' ? 'pill-ok' : 'pill-run', note);
+      } else if (exportData && exportData.status === 'ready') {
+        setReportStatus('pill-ok', 'Report is ready for download.');
+      } else if (exportData && exportData.status === 'failed') {
+        setReportStatus('pill-bad', exportData.error_message || 'Report generation failed.');
+      }
+    }
+
+    function ensureReportToken() {
+      const headers = getReportAuthHeaders();
+      if (!headers) {
+        setReportStatus('pill-warn', 'Paste a JWT access token first.');
+        showToast('Reports need a JWT access token.', 'warn');
+        return null;
+      }
+      syncReportToken();
+      return headers;
+    }
+
+    async function fetchReportJson(endpoint, options = {}) {
+      const headers = ensureReportToken();
+      if (!headers) return null;
+
+      const response = await fetch(endpoint, {
+        method: options.method || 'GET',
+        headers: {
+          ...headers,
+          ...(options.json ? { 'Content-Type': 'application/json' } : {}),
+        },
+        credentials: 'same-origin',
+        body: options.json ? JSON.stringify(options.json) : undefined,
+      });
+
+      const text = await response.text();
+      let payload = null;
+      try { payload = JSON.parse(text); } catch (error) { payload = null; }
+      return { response, text, payload };
+    }
+
+    async function downloadBinary(endpoint, filename, method = 'GET', jsonBody = null) {
+      const headers = ensureReportToken();
+      if (!headers) return;
+
+      setReportBusy(true);
+      try {
+        const response = await fetch(endpoint, {
+          method,
+          headers: {
+            ...headers,
+            ...(jsonBody ? { 'Content-Type': 'application/json' } : {}),
+          },
+          credentials: 'same-origin',
+          body: jsonBody ? JSON.stringify(jsonBody) : undefined,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || response.statusText || 'Download failed');
+        }
+
+        const blob = await response.blob();
+        const objectUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(objectUrl);
+      } finally {
+        setReportBusy(false);
+      }
+    }
+
+    async function createReportExport() {
+      const revisionId = parseInt(reportFields.revisionId.value, 10);
+      if (!revisionId) {
+        setReportStatus('pill-warn', 'Enter a revision ID first.');
+        showToast('Revision ID is required.', 'warn');
+        return;
+      }
+
+      if (!ensureReportToken()) return;
+
+      setReportBusy(true);
+      setReportStatus('pill-run', 'Generating PDF report…');
+      try {
+        const result = await fetchReportJson('/api/v1/reports/', {
+          method: 'POST',
+          json: { revision_id: revisionId },
+        });
+
+        if (!result) return;
+        const payload = result.payload || { detail: result.text };
+        renderReportExport(payload, payload.status === 'ready' ? 'Report ready.' : 'Report generation requested.');
+
+        if (!result.response.ok && result.response.status !== 202) {
+          throw new Error(payload.detail || result.response.statusText || 'Report generation failed');
+        }
+
+        showToast('Report export requested.', 'ok');
+      } catch (error) {
+        setReportStatus('pill-bad', String(error.message || error));
+        showToast('Report generation failed.', 'bad');
+      } finally {
+        setReportBusy(false);
+      }
+    }
+
+    async function refreshReportExport() {
+      const exportId = parseInt(reportFields.exportId.value || (lastReportExport && lastReportExport.id) || '', 10);
+      if (!exportId) {
+        setReportStatus('pill-warn', 'Enter a report export ID first.');
+        showToast('Report export ID is required for refresh.', 'warn');
+        return;
+      }
+
+      setReportBusy(true);
+      setReportStatus('pill-run', 'Refreshing report status…');
+      try {
+        const result = await fetchReportJson('/api/v1/reports/' + exportId + '/');
+        if (!result) return;
+        if (!result.response.ok) {
+          throw new Error((result.payload && result.payload.detail) || result.text || result.response.statusText || 'Could not load report status');
+        }
+        renderReportExport(result.payload, 'Report status refreshed.');
+      } catch (error) {
+        setReportStatus('pill-bad', String(error.message || error));
+        showToast('Could not refresh report status.', 'bad');
+      } finally {
+        setReportBusy(false);
+      }
+    }
+
+    async function downloadReportPdf() {
+      const exportId = parseInt(reportFields.exportId.value || (lastReportExport && lastReportExport.id) || '', 10);
+      if (!exportId) {
+        setReportStatus('pill-warn', 'Create or enter a report export ID first.');
+        showToast('No report export ID available.', 'warn');
+        return;
+      }
+
+      await downloadBinary('/api/v1/reports/' + exportId + '/download/', 'report_' + exportId + '.pdf');
+      setReportStatus('pill-ok', 'PDF download triggered.');
+      showToast('PDF download started.', 'ok');
+    }
+
+    async function exportDxf() {
+      const revisionId = parseInt(reportFields.revisionId.value, 10);
+      if (!revisionId) {
+        setReportStatus('pill-warn', 'Enter a revision ID first.');
+        showToast('Revision ID is required for DXF export.', 'warn');
+        return;
+      }
+
+      await downloadBinary('/api/v1/reports/dxf/', 'revision_' + revisionId + '.dxf', 'POST', { revision_id: revisionId });
+      setReportStatus('pill-ok', 'DXF download triggered.');
+      showToast('DXF export started.', 'ok');
+    }
+
     /* ════════════════════════════════════════════════════════════════
        FORM DATA
        ════════════════════════════════════════════════════════════════ */
     /* ── Auto-fill plot dimensions from raw_text ──────────────────────────── */
-    const rawTextEl = document.getElementById('raw_text');
     const widthEl   = document.getElementById('plot_width_m');
     const depthEl   = document.getElementById('plot_depth_m');
 
@@ -2029,26 +3155,25 @@
     /* ════════════════════════════════════════════════════════════════
        RUN ENDPOINT (core logic — functionally identical to original)
        ════════════════════════════════════════════════════════════════ */
-    async function runEndpoint(endpoint, loadingLabel) {
-      const out = document.getElementById('out');
+    async function runEndpoint(endpoint, loadingLabel, extraBody = {}) {
       setAllBusy(true);
       setStatus('pill-run', loadingLabel);
-      out.textContent = loadingLabel;
 
       try {
-        const bodyPayload = requestBodyFromForm();
+        const bodyPayload = {
+          ...requestBodyFromForm(),
+          ...extraBody,
+        };
         lastRequestPayload = bodyPayload;
         const result = await postJson(endpoint, bodyPayload);
-
         const responseBody = result.payload
           ? JSON.stringify(result.payload, null, 2)
           : result.text;
         lastResponseText = result.status + ' ' + result.statusText + '\n\n' + responseBody;
 
-        renderOutput(lastResponseText);
         renderArtifacts(result.payload || {}, endpoint);
         renderDesignBrief(result.payload || {});
-        renderSnapshot(endpoint, result, result.payload || {});
+        syncStudioLayoutFromPayload(result.payload || {});
 
         const payload = result.payload || {};
 
@@ -2078,7 +3203,7 @@
         }
 
         if (endpoint === '/api/v1/design/' && result.status >= 200 && result.status < 300) {
-          setStatus('pill-ok', 'Pipeline complete. Review brief and response payload.');
+          setStatus('pill-ok', 'Pipeline complete. Review the brief and adjust the layout.');
           showToast('Pipeline completed successfully.', 'ok');
         }
         if (endpoint === '/api/v1/design/hypar/bridge/' && result.status >= 200 && result.status < 300) {
@@ -2094,10 +3219,8 @@
         if (result.status < 400) loadHistory();
 
       } catch (e) {
-        out.textContent = 'Error: ' + e;
         renderArtifacts({}, endpoint);
         renderDesignBrief({});
-        renderSnapshot(endpoint, { status: 500, statusText: 'Client Error' }, {});
         setStatus('pill-bad', 'Request error: ' + e);
         showToast('Network error.', 'bad');
       } finally {
@@ -2167,25 +3290,74 @@
       catch (_) { return false; }
     }
 
-    document.getElementById('copy-request').addEventListener('click', async function () {
-      const body = Object.keys(lastRequestPayload || {}).length
-        ? lastRequestPayload
-        : requestBodyFromForm();
-      const ok = await copyText(JSON.stringify(body, null, 2));
-      if (ok) { setStatus('pill-ok', 'Request copied.'); showToast('Request payload copied.', 'ok'); }
-      else { setStatus('pill-warn', 'Copy failed in this browser.'); }
+    studioControls.loadPromptTemplate.addEventListener('click', function () {
+      const promptText = String(studioControls.promptTemplate.value || '').trim();
+      if (!promptText) return;
+      document.getElementById('raw_text').value = promptText;
+      updateCharCount();
+      showToast('Prompt template loaded into the brief.', 'ok');
     });
 
-    document.getElementById('copy-response').addEventListener('click', async function () {
-      const text = lastResponseText || document.getElementById('out').textContent;
-      const ok = await copyText(text);
-      if (ok) { setStatus('pill-ok', 'Response copied.'); showToast('Response copied.', 'ok'); }
-      else { setStatus('pill-warn', 'Copy failed in this browser.'); }
+    studioControls.copyPromptTemplate.addEventListener('click', async function () {
+      const promptText = String(studioControls.promptTemplate.value || '').trim();
+      const ok = await copyText(promptText);
+      if (ok) {
+        showToast('Prompt template copied.', 'ok');
+      } else {
+        showToast('Could not copy the prompt template.', 'warn');
+      }
     });
 
-    document.getElementById('clear-response').addEventListener('click', function () {
-      document.getElementById('out').textContent = 'Response cleared.';
-      lastResponseText = '';
+    studioControls.floorSelect.addEventListener('change', function () {
+      studioSelectedFloor = String(this.value || '');
+      refreshStudioZoneSelect();
+      renderStudioCanvas();
+      renderStudioZoneCards();
+      syncStudioInspectorFromSelection();
+    });
+
+    studioControls.zoneSelect.addEventListener('change', function () {
+      studioSelectedZoneId = String(this.value || '');
+      const selectedZone = getStudioSelectedZone();
+      if (selectedZone) {
+        studioSelectedFloor = String(selectedZone.floor);
+        studioControls.floorSelect.value = studioSelectedFloor;
+        refreshStudioZoneSelect();
+      }
+      renderStudioCanvas();
+      renderStudioZoneCards();
+      syncStudioInspectorFromSelection();
+    });
+
+    [
+      studioControls.zoneRoomType,
+      studioControls.zoneFloor,
+      studioControls.zoneX,
+      studioControls.zoneY,
+      studioControls.zoneWidth,
+      studioControls.zoneDepth,
+      studioControls.zoneOrientation,
+      studioControls.zoneStreetFacing,
+    ].forEach(control => {
+      control.addEventListener('input', syncStudioSelectedZoneFromInspector);
+      control.addEventListener('change', syncStudioSelectedZoneFromInspector);
+    });
+
+    studioControls.resetLayout.addEventListener('click', resetStudioDraft);
+    studioControls.applyLayout.addEventListener('click', applyStudioDraftToPipeline);
+
+    studioControls.canvas.addEventListener('pointerdown', handleStudioCanvasPointerDown);
+    studioControls.canvas.addEventListener('mousedown', handleStudioCanvasPointerDown);
+
+    window.addEventListener('pointermove', updateStudioZoneDrag);
+    window.addEventListener('mousemove', updateStudioZoneDrag);
+    window.addEventListener('pointerup', endStudioZoneDrag);
+    window.addEventListener('mouseup', endStudioZoneDrag);
+    window.addEventListener('pointercancel', endStudioZoneDrag);
+    window.addEventListener('resize', function () {
+      if (studioDraftLayoutZones.length) {
+        renderStudioCanvas();
+      }
     });
 
     /* ════════════════════════════════════════════════════════════════
@@ -2204,11 +3376,16 @@
     });
 
     document.getElementById('refresh-history').addEventListener('click', loadHistory);
+    reportControls.create.addEventListener('click', createReportExport);
+    reportControls.refresh.addEventListener('click', refreshReportExport);
+    reportControls.downloadPdf.addEventListener('click', downloadReportPdf);
+    reportControls.downloadDxf.addEventListener('click', exportDxf);
 
     /* ════════════════════════════════════════════════════════════════
        INIT
        ════════════════════════════════════════════════════════════════ */
     loadHistory();
+    setReportStatus('pill-idle', 'Paste a token and revision ID, then generate a PDF or DXF.');
   </script>
 </body>
 

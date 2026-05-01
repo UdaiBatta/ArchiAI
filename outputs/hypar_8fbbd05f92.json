@@ -1,0 +1,430 @@
+{
+  "schema": "archi3d-hypar-concept/v1",
+  "generated_at": "2026-05-01T17:18:52.090096+00:00",
+  "metadata": {
+    "region_id": "india_mumbai",
+    "region_name": "India \u2014 Mumbai (DCPR 2034)",
+    "building_type": "residential",
+    "session_seed": "8fbbd05f92",
+    "project_name": "Design a 2-floor residential house in Mumbai on a 30 by 40 m",
+    "explainability_schema": "archi3d.explanation.v1",
+    "plot_dimensions_m": {
+      "width": 30.0,
+      "depth": 40.0,
+      "area_sqm": 1200.0,
+      "facing_direction": "north"
+    },
+    "buildable_footprint_m": {
+      "width_m": 21.828,
+      "depth_m": 27.487,
+      "area_sqm": 600.0,
+      "scale": 0.8085
+    }
+  },
+  "plot_dimensions_m": {
+    "width": 30.0,
+    "depth": 40.0,
+    "area_sqm": 1200.0,
+    "facing_direction": "north"
+  },
+  "buildable_footprint_m": {
+    "width_m": 21.828,
+    "depth_m": 27.487,
+    "area_sqm": 600.0,
+    "scale": 0.8085
+  },
+  "levels": [
+    {
+      "level": 0,
+      "elevation_m": 0.0,
+      "height_m": 3.0
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone_1",
+      "room_type": "living_room",
+      "level": 0,
+      "orientation": "northwest",
+      "street_facing": true,
+      "origin_m": [
+        0.319,
+        14.193,
+        0.0
+      ],
+      "size_m": [
+        10.276,
+        12.845,
+        3.0
+      ],
+      "area_sqm": 132.0,
+      "target_area_sqm": 132.0,
+      "furniture": [
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "Sofa",
+          "zone_id": "zone_1",
+          "floor": 0,
+          "origin_m": [
+            4.357,
+            26.038,
+            0.0
+          ],
+          "size_m": [
+            2.2,
+            0.9,
+            0.85
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced Sofa in living_room"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "CoffeeTable",
+          "zone_id": "zone_1",
+          "floor": 0,
+          "origin_m": [
+            4.857,
+            18.689,
+            0.0
+          ],
+          "size_m": [
+            1.2,
+            0.6,
+            0.45
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced CoffeeTable in living_room"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "TVUnit",
+          "zone_id": "zone_1",
+          "floor": 0,
+          "origin_m": [
+            4.707,
+            14.293,
+            0.0
+          ],
+          "size_m": [
+            1.5,
+            0.45,
+            0.55
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced TVUnit in living_room"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "Armchair",
+          "zone_id": "zone_1",
+          "floor": 0,
+          "origin_m": [
+            0.419,
+            19.973,
+            0.0
+          ],
+          "size_m": [
+            0.85,
+            0.85,
+            0.85
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced Armchair in living_room"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "Armchair",
+          "zone_id": "zone_1",
+          "floor": 0,
+          "origin_m": [
+            9.645,
+            19.973,
+            0.0
+          ],
+          "size_m": [
+            0.85,
+            0.85,
+            0.85
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced Armchair in living_room"
+        }
+      ]
+    },
+    {
+      "id": "zone_2",
+      "room_type": "staircase",
+      "level": 0,
+      "orientation": "northeast",
+      "street_facing": true,
+      "origin_m": [
+        15.336,
+        17.717,
+        0.0
+      ],
+      "size_m": [
+        2.07,
+        5.797,
+        3.0
+      ],
+      "area_sqm": 12.0,
+      "target_area_sqm": 12.0,
+      "furniture": [
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "StaircaseFlight",
+          "zone_id": "zone_2",
+          "floor": 0,
+          "origin_m": [
+            15.871,
+            19.115,
+            0.0
+          ],
+          "size_m": [
+            1.0,
+            3.0,
+            0.0
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced StaircaseFlight in staircase"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "StaircaseLanding",
+          "zone_id": "zone_2",
+          "floor": 0,
+          "origin_m": [
+            15.871,
+            22.414,
+            0.0
+          ],
+          "size_m": [
+            1.0,
+            1.0,
+            0.0
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced StaircaseLanding in staircase"
+        }
+      ]
+    },
+    {
+      "id": "zone_3",
+      "room_type": "parking",
+      "level": 0,
+      "orientation": "southwest",
+      "street_facing": false,
+      "origin_m": [
+        3.165,
+        2.289,
+        0.0
+      ],
+      "size_m": [
+        4.583,
+        9.165,
+        3.0
+      ],
+      "area_sqm": 42.0,
+      "target_area_sqm": 42.0,
+      "furniture": [
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "CarSlot",
+          "zone_id": "zone_3",
+          "floor": 0,
+          "origin_m": [
+            4.207,
+            4.371,
+            0.0
+          ],
+          "size_m": [
+            2.5,
+            5.0,
+            0.1
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced CarSlot in parking"
+        }
+      ]
+    },
+    {
+      "id": "zone_4",
+      "room_type": "kitchen",
+      "level": 0,
+      "orientation": "southeast",
+      "street_facing": false,
+      "origin_m": [
+        12.785,
+        1.852,
+        0.0
+      ],
+      "size_m": [
+        7.171,
+        10.04,
+        3.0
+      ],
+      "area_sqm": 72.0,
+      "target_area_sqm": 72.0,
+      "furniture": [
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "KitchenCounter",
+          "zone_id": "zone_4",
+          "floor": 0,
+          "origin_m": [
+            12.885,
+            11.192,
+            0.0
+          ],
+          "size_m": [
+            6.971,
+            0.6,
+            0.85
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced KitchenCounter in kitchen"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "KitchenIsland",
+          "zone_id": "zone_4",
+          "floor": 0,
+          "origin_m": [
+            15.771,
+            5.366,
+            0.0
+          ],
+          "size_m": [
+            1.2,
+            0.7,
+            0.9
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced KitchenIsland in kitchen"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "DiningTable",
+          "zone_id": "zone_4",
+          "floor": 0,
+          "origin_m": [
+            15.621,
+            2.252,
+            0.0
+          ],
+          "size_m": [
+            1.5,
+            0.9,
+            0.75
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced DiningTable in kitchen"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "DiningChair",
+          "zone_id": "zone_4",
+          "floor": 0,
+          "origin_m": [
+            16.146,
+            6.647,
+            0.0
+          ],
+          "size_m": [
+            0.45,
+            0.45,
+            0.9
+          ],
+          "rotation_deg": 0.0,
+          "note": "Neufert-sourced DiningChair in kitchen"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "DiningChair",
+          "zone_id": "zone_4",
+          "floor": 0,
+          "origin_m": [
+            16.146,
+            3.202,
+            0.0
+          ],
+          "size_m": [
+            0.45,
+            0.45,
+            0.9
+          ],
+          "rotation_deg": 180.0,
+          "note": "Neufert-sourced DiningChair in kitchen"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "DiningChair",
+          "zone_id": "zone_4",
+          "floor": 0,
+          "origin_m": [
+            15.121,
+            2.477,
+            0.0
+          ],
+          "size_m": [
+            0.45,
+            0.45,
+            0.9
+          ],
+          "rotation_deg": 90.0,
+          "note": "Neufert-sourced DiningChair in kitchen"
+        },
+        {
+          "kind": "FurnitureElement",
+          "hypar_elements_type": "Mass",
+          "hypar_doc": "https://hypar-io.github.io/Elements/api/Elements.Mass.html",
+          "type": "DiningChair",
+          "zone_id": "zone_4",
+          "floor": 0,
+          "origin_m": [
+            17.17,
+            2.477,
+            0.0
+          ],
+          "size_m": [
+            0.45,
+            0.45,
+            0.9
+          ],
+          "rotation_deg": 270.0,
+          "note": "Neufert-sourced DiningChair in kitchen"
+        }
+      ]
+    }
+  ],
+  "furniture_element_count": 15
+}

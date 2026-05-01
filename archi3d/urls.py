@@ -39,6 +39,15 @@ urlpatterns = [
     # Design pipeline API — all design-related endpoints
     path("api/v1/design/", include("apps.design.urls")),
 
+    # Authentication API — JWT-based user accounts
+    path("api/v1/auth/", include("apps.accounts.urls")),
+
+    # Project management API
+    path("api/v1/projects/", include("apps.projects.urls")),
+
+    # Report exports and DXF output
+    path("api/v1/reports/", include("apps.reports.urls")),
+
     # Health check — simple ping to confirm server is running
     path("api/v1/health/", include("apps.health.urls")),
 ]

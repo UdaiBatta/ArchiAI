@@ -174,6 +174,16 @@ class DesignRequestSerializer(serializers.Serializer):
         ),
     )
 
+    layout_zones_override = serializers.JSONField(
+        required=False,
+        default=list,
+        write_only=True,
+        help_text=(
+            "Optional edited zone list from the browser studio. "
+            "If provided, the pipeline uses these zones instead of generating a fresh layout."
+        ),
+    )
+
     use_vastu = serializers.BooleanField(
         required=False,
         default=False,
@@ -210,6 +220,12 @@ class DesignRequestSerializer(serializers.Serializer):
         default="",
         max_length=200,
         help_text="Optional project name hint sent in Hypar payload metadata.",
+    )
+
+    job_id = serializers.UUIDField(
+        required=False,
+        write_only=True,
+        help_text="Optional websocket/job correlation ID supplied by the frontend.",
     )
 
     def validate(self, attrs):
