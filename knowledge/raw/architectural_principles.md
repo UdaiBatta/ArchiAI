@@ -1,3 +1,9 @@
+---
+region: all
+building_type: residential
+tags: [circulation, ventilation, privacy, staircase, vastu]
+---
+
 # Residential Planning Heuristics
 
 ## Entry and Public Zone

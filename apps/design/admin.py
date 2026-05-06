@@ -20,7 +20,7 @@ CUSTOMIZATIONS BELOW:
     - readonly_fields: fields shown but not editable (output fields)
 """
 from django.contrib import admin
-from apps.design.models import DesignSession, OperationJob
+from apps.design.models import DesignSession
 
 
 @admin.register(DesignSession)
@@ -105,35 +105,3 @@ class DesignSessionAdmin(admin.ModelAdmin):
             return "❌ No"
         return "—"
     is_compliant_display.short_description = "Compliant?"
-
-
-@admin.register(OperationJob)
-class OperationJobAdmin(admin.ModelAdmin):
-    list_display = [
-        "job_id",
-        "job_type",
-        "status",
-        "session",
-        "retry_count",
-        "created_at",
-        "finished_at",
-    ]
-    list_filter = ["job_type", "status", "created_at", "finished_at"]
-    search_fields = ["job_id", "failure_reason", "artifact_path"]
-    readonly_fields = [
-        "job_id",
-        "job_type",
-        "status",
-        "session",
-        "artifact_path",
-        "retry_count",
-        "max_retries",
-        "timeout_seconds",
-        "failure_reason",
-        "request_payload",
-        "result_payload",
-        "started_at",
-        "finished_at",
-        "created_at",
-        "updated_at",
-    ]

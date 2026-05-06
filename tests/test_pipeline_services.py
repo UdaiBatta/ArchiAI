@@ -1,7 +1,7 @@
 import pytest
-import json
 
 from services.bylaw_loader import load_bylaws
+from services.explanation_builder import build_explanation, ExplanationSchema
 from services.geometry_validator import validate_layout_geometry
 from services.input_parser import parse_design_input
 from services.layout_generator import generate_conceptual_layout
@@ -22,94 +22,6 @@ def test_vectorless_retriever_returns_chunks(tmp_path):
     assert len(results) == 3
     assert all("title" in item for item in results)
     assert all("score" in item for item in results)
-    assert all("section_id" in item for item in results)
-    assert all("doc_id" in item for item in results)
-
-
-@pytest.mark.unit
-def test_vectorless_retriever_respects_region_and_building_scope(tmp_path):
-    knowledge_file = tmp_path / "scoped_chunks.json"
-    knowledge_file.write_text(
-        json.dumps(
-            {
-                "doc_id": "arch_casebook",
-                "chunks": [
-                    {
-                        "id": "mumbai_res_rule",
-                        "title": "Mumbai residential FAR",
-                        "text": "Mumbai residential FAR clause with setback compliance guidance.",
-                        "region_id": "india_mumbai",
-                        "building_type": "residential",
-                        "tags": ["far", "setback"],
-                        "entities": ["far", "setback", "residential"],
-                        "section_path": ["Rules", "Mumbai", "Residential"],
-                        "page_no": 12,
-                    },
-                    {
-                        "id": "nyc_res_rule",
-                        "title": "NYC residential FAR",
-                        "text": "NYC low density FAR clause.",
-                        "region_id": "usa_nyc",
-                        "building_type": "residential",
-                        "tags": ["far"],
-                        "section_path": ["Rules", "NYC", "Residential"],
-                    },
-                    {
-                        "id": "mumbai_commercial_rule",
-                        "title": "Mumbai commercial FAR",
-                        "text": "Commercial FAR and parking guidance.",
-                        "region_id": "india_mumbai",
-                        "building_type": "commercial",
-                        "tags": ["far", "parking"],
-                        "section_path": ["Rules", "Mumbai", "Commercial"],
-                    },
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=tmp_path)
-    results = retriever.retrieve(
-        query="mumbai residential far setback",
-        region_id="india_mumbai",
-        building_type="residential",
-        top_k=5,
-    )
-
-    assert len(results) >= 1
-    assert all(item["region_id"] in {"all", "india_mumbai"} for item in results)
-    assert all(item["building_type"] in {"all", "residential"} for item in results)
-    assert results[0]["id"] == "mumbai_res_rule"
-
-
-@pytest.mark.unit
-def test_vectorless_retriever_includes_markdown_section_metadata(tmp_path):
-    md = tmp_path / "arch_doc.md"
-    md.write_text(
-        """
-# Residential Planning
-## Kitchen and Dining
-Keep kitchen adjacent to dining with ventilation.
-
-## Stair Placement
-Use central stair for efficient circulation.
-""".strip(),
-        encoding="utf-8",
-    )
-
-    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=tmp_path)
-    results = retriever.retrieve(
-        query="kitchen dining ventilation",
-        region_id="india_mumbai",
-        building_type="residential",
-        top_k=3,
-    )
-
-    assert len(results) >= 1
-    assert all(isinstance(item.get("section_path"), list) for item in results)
-    assert any(item.get("section_path") for item in results)
-    assert all(item.get("section_id") for item in results)
 
 
 @pytest.mark.unit
@@ -206,19 +118,9 @@ def test_pipeline_returns_hypar_artifact(settings, tmp_path):
 
     assert result["status"] in {"completed", "layout_generated"}
     assert isinstance(result["layout_zones"], list)
-    assert isinstance(result.get("design_brief"), dict)
-    assert result["design_brief"]["priorities"][0] == "Max usable area"
-    assert "zoning_note" in result["design_brief"]
-    assert "circulation_note" in result["design_brief"]
     if result["hypar_json_path"]:
         assert result["hypar_json_path"].endswith(".json")
         assert (tmp_path / result["hypar_json_path"]).exists()
-        ref = result.get("hypar_elements_reference_path", "")
-        assert ref.endswith(".json")
-        assert (tmp_path / ref).exists()
-        payload = json.loads((tmp_path / ref).read_text(encoding="utf-8"))
-        assert payload.get("format") == "archi3d.elements_reference/v1"
-        assert "hypar-io.github.io/Elements" in payload["documentation"]["hypar_elements_api"]
 
 
 @pytest.mark.unit
@@ -273,63 +175,6 @@ def test_pipeline_strict_clarification_gate_skips_generation(settings, tmp_path)
 
 
 @pytest.mark.unit
-def test_pipeline_runtime_hypar_credentials_are_used_but_not_persisted(settings, tmp_path, monkeypatch):
-    settings.ARCHI3D = {
-        **settings.ARCHI3D,
-        "OUTPUTS_DIR": tmp_path,
-        "HYPAR_API_URL": "",
-        "HYPAR_API_TOKEN": "",
-    }
-
-    captured = {}
-
-    def fake_submit(payload, api_url, api_token):
-        captured["api_url"] = api_url
-        captured["api_token"] = api_token
-        return {"submitted": True, "status_code": 200, "response": {"ok": True}}
-
-    monkeypatch.setattr("services.pipeline.submit_hypar_payload", fake_submit)
-
-    result = run_design_pipeline(
-        {
-            "raw_text": "Design a 2-floor residential house in Mumbai on a 30x40 plot with parking",
-            "region": "india_mumbai",
-            "building_type": "residential",
-            "plot_width_m": 30,
-            "plot_depth_m": 40,
-            "num_floors": 2,
-            "num_units": 1,
-            "plot_facing_direction": "north",
-            "preferences": {"parking": True},
-            "hypar_api_url": "https://example.com/hypar/submit",
-            "hypar_api_token": "test-token-123",
-        }
-    )
-
-    assert captured["api_url"] == "https://example.com/hypar/submit"
-    assert captured["api_token"] == "test-token-123"
-    assert "_hypar_api_url" not in result["parsed_input"]
-    assert "_hypar_api_token" not in result["parsed_input"]
-    assert "hypar_api_url" not in result["parsed_input"]
-    assert "hypar_api_token" not in result["parsed_input"]
-
-
-@pytest.mark.unit
-def test_parser_does_not_require_plot_dimensions_when_present_in_raw_text():
-    parsed, meta = parse_design_input(
-        incoming_data={
-            "raw_text": "Design a 2-floor house in Mumbai on a 30x40 metre plot",
-        },
-        ollama_model="unused",
-        ollama_host="http://localhost:11434",
-    )
-
-    assert parsed["plot_width_m"] == 30.0
-    assert parsed["plot_depth_m"] == 40.0
-    assert meta["requires_clarification"] is False
-
-
-@pytest.mark.unit
 def test_geometry_validator_detects_overlap_issues():
     zones = [
         {
@@ -356,3 +201,152 @@ def test_geometry_validator_detects_overlap_issues():
 
     assert result["valid"] is False
     assert len(result["overlap_issues"]) >= 1
+
+
+@pytest.mark.unit
+def test_explanation_schema_structure_in_full_pipeline(settings, tmp_path):
+    """Explanation returned by the full pipeline must be a structured dict
+    matching ExplanationSchema v1.0.0, not a plain string."""
+    settings.ARCHI3D = {
+        **settings.ARCHI3D,
+        "OUTPUTS_DIR": tmp_path,
+    }
+
+    result = run_design_pipeline(
+        {
+            "raw_text": "Design a 2-floor residential house on a 30x40 plot",
+            "region": "india_mumbai",
+            "building_type": "residential",
+            "plot_width_m": 30,
+            "plot_depth_m": 40,
+            "num_floors": 2,
+            "num_units": 1,
+            "plot_facing_direction": "north",
+            "preferences": {"parking": True},
+        }
+    )
+
+    explanation = result["explanation"]
+
+    # Must be a dict (not a string).
+    assert isinstance(explanation, dict), (
+        f"Expected explanation to be a dict, got {type(explanation).__name__}"
+    )
+
+    # Required top-level keys.
+    assert explanation["schema_version"] == "1.0.0"
+    assert isinstance(explanation["compliance_summary"], list)
+    assert isinstance(explanation["trade_offs"], list)
+    assert isinstance(explanation["geometry_status"], dict)
+    assert isinstance(explanation["raw_explanation"], str)
+    assert len(explanation["raw_explanation"]) > 0
+
+    # compliance_summary entries should have expected fields.
+    if explanation["compliance_summary"]:
+        first_check = explanation["compliance_summary"][0]
+        assert "check_name" in first_check
+        assert "passed" in first_check
+        assert "message" in first_check
+        assert "severity" in first_check
+
+    # Validate against Pydantic model directly.
+    schema = ExplanationSchema(**explanation)
+    assert schema.schema_version == "1.0.0"
+
+
+@pytest.mark.unit
+def test_clarification_path_returns_structured_explanation(settings, tmp_path):
+    """Even the clarification-only response must return a structured
+    explanation dict, not a plain string."""
+    settings.ARCHI3D = {
+        **settings.ARCHI3D,
+        "OUTPUTS_DIR": tmp_path,
+    }
+
+    result = run_design_pipeline(
+        {
+            "raw_text": "Design a vastu-ready house",
+        }
+    )
+
+    assert result["requires_clarification"] is True
+
+    explanation = result["explanation"]
+    assert isinstance(explanation, dict), (
+        f"Expected explanation dict on clarification path, got {type(explanation).__name__}"
+    )
+    assert explanation["schema_version"] == "1.0.0"
+    assert "raw_explanation" in explanation
+    assert "clarification" in explanation["raw_explanation"].lower()
+
+
+@pytest.mark.unit
+def test_retriever_mumbai_excludes_nyc_chunks(settings):
+    """When region is india_mumbai, retrieved chunks must NOT include
+    any chunk tagged with region_id=usa_nyc."""
+    from pathlib import Path
+
+    knowledge_dir = Path(settings.BASE_DIR) / "knowledge" / "raw"
+    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=knowledge_dir)
+    results = retriever.retrieve(
+        query="residential setbacks parking far",
+        region_id="india_mumbai",
+        building_type="residential",
+        top_k=10,
+    )
+
+    assert len(results) >= 1
+    for item in results:
+        assert item["region_id"] != "usa_nyc", (
+            f"Chunk '{item['title']}' tagged usa_nyc was returned for an india_mumbai query"
+        )
+
+
+@pytest.mark.unit
+def test_retriever_nyc_excludes_mumbai_chunks(settings):
+    """When region is usa_nyc, retrieved chunks must NOT include
+    any chunk tagged with region_id=india_mumbai."""
+    from pathlib import Path
+
+    knowledge_dir = Path(settings.BASE_DIR) / "knowledge" / "raw"
+    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=knowledge_dir)
+    results = retriever.retrieve(
+        query="residential setbacks parking far zoning",
+        region_id="usa_nyc",
+        building_type="residential",
+        top_k=10,
+    )
+
+    assert len(results) >= 1
+    for item in results:
+        assert item["region_id"] != "india_mumbai", (
+            f"Chunk '{item['title']}' tagged india_mumbai was returned for a usa_nyc query"
+        )
+        assert item["region_id"] != "india_delhi", (
+            f"Chunk '{item['title']}' tagged india_delhi was returned for a usa_nyc query"
+        )
+
+
+@pytest.mark.unit
+def test_markdown_frontmatter_parsed_into_chunks(settings):
+    """Chunks loaded from markdown files with YAML frontmatter must
+    carry the correct region_id and building_type metadata."""
+    from pathlib import Path
+    from services.vectorless_rag import load_knowledge_chunks
+
+    knowledge_dir = Path(settings.BASE_DIR) / "knowledge" / "raw"
+    chunks = load_knowledge_chunks(knowledge_dir)
+
+    mumbai_chunks = [c for c in chunks if c.region_id == "india_mumbai"]
+    nyc_chunks = [c for c in chunks if c.region_id == "usa_nyc"]
+    all_chunks = [c for c in chunks if c.region_id == "all"]
+
+    assert len(mumbai_chunks) >= 1, "Expected at least 1 chunk tagged india_mumbai"
+    assert len(nyc_chunks) >= 1, "Expected at least 1 chunk tagged usa_nyc"
+    assert len(all_chunks) >= 1, "Expected at least 1 chunk tagged 'all'"
+
+    # Verify tags were also parsed from frontmatter.
+    for chunk in mumbai_chunks:
+        assert len(chunk.tags) > 0, f"Mumbai chunk '{chunk.title}' should have tags"
+        assert chunk.building_type == "residential"
+

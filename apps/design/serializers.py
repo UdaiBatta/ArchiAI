@@ -35,7 +35,6 @@ DEBUGGING TIPS:
 """
 
 from rest_framework import serializers
-from apps.design.models import OperationJob
 
 
 class DesignRequestSerializer(serializers.Serializer):
@@ -174,16 +173,6 @@ class DesignRequestSerializer(serializers.Serializer):
         ),
     )
 
-    layout_zones_override = serializers.JSONField(
-        required=False,
-        default=list,
-        write_only=True,
-        help_text=(
-            "Optional edited zone list from the browser studio. "
-            "If provided, the pipeline uses these zones instead of generating a fresh layout."
-        ),
-    )
-
     use_vastu = serializers.BooleanField(
         required=False,
         default=False,
@@ -191,41 +180,6 @@ class DesignRequestSerializer(serializers.Serializer):
             "If true, activate Vastu as a preference layer. "
             "Bylaw compliance remains higher priority."
         ),
-    )
-
-    hypar_api_url = serializers.URLField(
-        required=False,
-        allow_blank=True,
-        default="",
-        write_only=True,
-        help_text=(
-            "Optional Hypar submission endpoint URL. "
-            "Example placeholder: https://your-hypar-endpoint"
-        ),
-    )
-
-    hypar_api_token = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        default="",
-        write_only=True,
-        trim_whitespace=True,
-        style={"input_type": "password"},
-        help_text="Optional Hypar API bearer token for direct auto-submission.",
-    )
-
-    hypar_project_name = serializers.CharField(
-        required=False,
-        allow_blank=True,
-        default="",
-        max_length=200,
-        help_text="Optional project name hint sent in Hypar payload metadata.",
-    )
-
-    job_id = serializers.UUIDField(
-        required=False,
-        write_only=True,
-        help_text="Optional websocket/job correlation ID supplied by the frontend.",
     )
 
     def validate(self, attrs):
@@ -330,12 +284,9 @@ class DesignResponseSerializer(serializers.Serializer):
     vastu_report = serializers.JSONField()
     retrieved_knowledge = serializers.JSONField()
     layout_zones = serializers.JSONField()
-    explanation = serializers.CharField()
-    design_brief = serializers.SerializerMethodField()
+    explanation = serializers.JSONField()
     glb_file_path = serializers.CharField()
     hypar_json_path = serializers.CharField()
-    hypar_submission = serializers.SerializerMethodField()
-    hypar_elements_reference_path = serializers.SerializerMethodField()
     error_message = serializers.CharField()
     requires_clarification = serializers.SerializerMethodField()
     missing_fields = serializers.SerializerMethodField()
@@ -350,28 +301,6 @@ class DesignResponseSerializer(serializers.Serializer):
             parser_meta = parsed_input.get("_parser_meta")
             if isinstance(parser_meta, dict):
                 return parser_meta
-        return {}
-
-    def get_hypar_elements_reference_path(self, obj):
-        parsed_input = obj.parsed_input or {}
-        if isinstance(parsed_input, dict):
-            return str(parsed_input.get("_hypar_elements_reference_path", "") or "")
-        return ""
-
-    def get_hypar_submission(self, obj):
-        parsed_input = obj.parsed_input or {}
-        if isinstance(parsed_input, dict):
-            value = parsed_input.get("_hypar_submission", {})
-            if isinstance(value, dict):
-                return value
-        return {"submitted": False, "reason": "not_attempted"}
-
-    def get_design_brief(self, obj):
-        parsed_input = obj.parsed_input or {}
-        if isinstance(parsed_input, dict):
-            value = parsed_input.get("_design_brief", {})
-            if isinstance(value, dict):
-                return value
         return {}
 
     def get_requires_clarification(self, obj):
@@ -450,65 +379,3 @@ class DesignListSerializer(serializers.Serializer):
                 return bool(parser_meta.get("requires_clarification", False))
             return bool(parsed_input.get("_missing_fields"))
         return False
-
-
-class HyparBridgeJobCreateSerializer(DesignRequestSerializer):
-    max_retries = serializers.IntegerField(required=False, default=2, min_value=0, max_value=5)
-    timeout_seconds = serializers.IntegerField(required=False, default=120, min_value=10, max_value=1800)
-
-
-class IngestionJobCreateSerializer(serializers.Serializer):
-    source_dir = serializers.CharField(required=False, allow_blank=True, default="")
-    output_file = serializers.CharField(required=False, allow_blank=True, default="")
-    chunk_chars = serializers.IntegerField(required=False, default=1200, min_value=200, max_value=5000)
-    overlap_chars = serializers.IntegerField(required=False, default=200, min_value=0, max_value=1000)
-    max_section_chars = serializers.IntegerField(required=False, default=300000, min_value=1000, max_value=2000000)
-    max_pdf_pages = serializers.IntegerField(required=False, default=300, min_value=1, max_value=2000)
-    max_pdf_chars = serializers.IntegerField(required=False, default=1500000, min_value=1000, max_value=5000000)
-
-
-class Graph2PlanJobCreateSerializer(serializers.Serializer):
-    graph2plan_root = serializers.CharField(required=False, allow_blank=True, default="")
-    python_executable = serializers.CharField(required=False, allow_blank=True, default="")
-    preprocess = serializers.BooleanField(required=False, default=True)
-    preprocess_steps = serializers.CharField(required=False, allow_blank=True, default="1,2,3,4,5,6")
-    split = serializers.BooleanField(required=False, default=False)
-    train = serializers.BooleanField(required=False, default=True)
-    train_args = serializers.CharField(required=False, allow_blank=True, default="")
-    max_retries = serializers.IntegerField(required=False, default=0, min_value=0, max_value=2)
-    timeout_seconds = serializers.IntegerField(required=False, default=21600, min_value=60, max_value=86400)
-
-    def validate(self, attrs):
-        if not attrs.get("preprocess") and not attrs.get("split") and not attrs.get("train"):
-            raise serializers.ValidationError(
-                "At least one of preprocess, split, or train must be true."
-            )
-        return attrs
-
-
-class OperationJobSerializer(serializers.ModelSerializer):
-    job_id = serializers.UUIDField(read_only=True)
-    session_id = serializers.SerializerMethodField()
-
-    class Meta:
-        model = OperationJob
-        fields = [
-            "job_id",
-            "job_type",
-            "status",
-            "session_id",
-            "artifact_path",
-            "retry_count",
-            "max_retries",
-            "timeout_seconds",
-            "failure_reason",
-            "request_payload",
-            "result_payload",
-            "started_at",
-            "finished_at",
-            "created_at",
-            "updated_at",
-        ]
-
-    def get_session_id(self, obj):
-        return obj.session_id

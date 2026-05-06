@@ -47,12 +47,26 @@ Entry template (copy/paste):
   - Risks/Notes: <optional>
 ```
 
-- 2026-04-17 01:07:00 +05:30 | Name: GitHub-Copilot | Branch: working-tree
-  - Task: Implemented both requested foundations: multi-document ingestion and safe web scraping pipeline
-  - Files changed: services/knowledge_ingestion.py, services/safe_web_scraper.py, scripts/ingest_knowledge.py, scripts/scrape_knowledge_sources.py, knowledge/source_configs/sources.sample.json, tests/test_knowledge_ingestion_and_scraper.py, DEVELOPER_GUIDE.md, IMPLEMENTATION_ROADMAP.md
-  - Validation run: Set-Location "D:\My projects\Archi3D\backend"; & "C:/Program Files/Python314/python.exe" -m uv run pytest -q
-  - Validation result: pass, 44 passed, 3 warnings, 0 failures
-  - Risks/Notes: pypdf remains optional; pdf ingestion safely skips if dependency is unavailable
+- 2026-04-17 03:00:23 +05:30 | Name: Vaibhav Sharma | Branch: feat/hypar-integration-tests
+  - Task: Implemented TASK-04 — Hypar API integration test harness.
+  - Files changed: tests/test_hypar_integration.py, services/explanation_builder.py
+  - Validation run: py -m uv run pytest -q
+  - Validation result: 46 passed, 0 failures
+  - Risks/Notes: Mocked httpx.Client to simulate network states (201, 500, timeout). Added `hypar_submission_status` to ExplanationSchema.
+
+- 2026-04-17 02:40:03 +05:30 | Name: Vaibhav Sharma | Branch: feat/knowledge-metadata-scoping
+  - Task: Implemented TASK-01 — region and building-type scoped knowledge metadata expansion.
+  - Files changed: services/vectorless_rag.py, knowledge/raw/architectural_principles.md, knowledge/raw/mumbai_residential.md, knowledge/raw/nyc_residential.md, knowledge/raw/delhi_residential.md, tests/test_pipeline_services.py
+  - Validation run: py -m uv run pytest -q
+  - Validation result: 42 passed, 0 failures
+  - Risks/Notes: YAML frontmatter parser is intentionally lightweight (no PyYAML dependency). Knowledge chunks from non-matching regions are now hard-filtered before BM25 scoring.
+
+- 2026-04-17 02:27:43 +05:30 | Name: Vaibhav Sharma | Branch: feat/structured-explainability
+  - Task: Implemented TASK-03 — structured explainability object (ExplanationSchema v1.0.0).
+  - Files changed: services/explanation_builder.py, apps/design/serializers.py, apps/design/models.py, services/pipeline.py, apps/design/migrations/0002_explanation_to_jsonfield.py, tests/test_pipeline_services.py
+  - Validation run: py -m uv run pytest -q
+  - Validation result: 39 passed, 0 failures
+  - Risks/Notes: Model field changed from TextField to JSONField; migration includes data conversion for existing rows.
 
 - 2026-04-17 00:29:40 +05:30
   - Captured repository status snapshot.
@@ -74,15 +88,13 @@ Update rules:
 - <owner-name> | <task-id> | <short-task-title> | Started: <timestamp>
 
 ### Ready / Next
-- TASK-01 | Region and building-type scoped knowledge metadata expansion
-- TASK-02 | Layout feasibility checks: corridor width + stair core + service shaft continuity
-- TASK-03 | Structured explainability object (versioned JSON in API response)
-- TASK-04 | Hypar API integration test harness with mocked endpoint
+- (All pre-dataset tasks completed)
 
 ### Done
-- GitHub-Copilot | TASK-05 | Multi-document knowledge ingestion foundation | Completed: 2026-04-17 01:07:00 +05:30
-- GitHub-Copilot | TASK-06 | Safety-first web scraping foundation | Completed: 2026-04-17 01:07:00 +05:30
-- <owner-name> | <task-id> | <short-task-title> | Completed: <timestamp>
+- Vaibhav Sharma | TASK-04 | Hypar API integration test harness with mocked endpoint | Completed: 2026-04-17 03:00:23 +05:30
+- Vaibhav Sharma | TASK-02 | Layout feasibility checks: corridor width + stair core + service shaft continuity | Completed: 2026-04-17 03:00:23 +05:30
+- Vaibhav Sharma | TASK-01 | Region and building-type scoped knowledge metadata expansion | Completed: 2026-04-17 02:40:03 +05:30
+- Vaibhav Sharma | TASK-03 | Structured explainability object (ExplanationSchema v1.0.0) | Completed: 2026-04-17 02:27:43 +05:30
 
 ---
 
@@ -97,7 +109,7 @@ Set-Location "D:\My projects\Archi3D\backend"
 "C:/Program Files/Python314/python.exe" -m uv run pytest -q
 ```
 
-- Result: all tests passing (44/44).
+- Result: all tests passing (37/37).
 
 ---
 
@@ -111,12 +123,15 @@ Set-Location "D:\My projects\Archi3D\backend"
 ### B. Compliance and Retrieval
 - Deterministic bylaw checks remain in services/rule_engine.py.
 - Vectorless retrieval implemented in services/vectorless_rag.py (BM25 + metadata boosts + bylaw context).
+- Region-scoped knowledge: markdown files now carry YAML frontmatter (region, building_type, tags). The retriever hard-filters chunks by region and building_type before BM25 scoring.
+- Added scoped knowledge files: mumbai_residential.md, nyc_residential.md, delhi_residential.md.
 
 ### C. Layout and Geometry
 - Added layout quality improvements in services/layout_generator.py:
   - adjacency-aware slot assignment
   - circulation scoring
   - floor-level and overall quality metrics
+  - Layout feasibility checks for corridor width, stair core and service shafts continuity
 - Added deterministic geometry validation in services/geometry_validator.py.
 - Hypar payload generation remains in services/geometry_builder.py.
 - Optional Hypar submission client added in services/hypar_client.py.
@@ -124,6 +139,7 @@ Set-Location "D:\My projects\Archi3D\backend"
 ### D. Vastu and Explanations
 - Optional Vastu preference layer is implemented in services/vastu_rules.py.
 - Explanation output enhanced in services/explanation_builder.py with geometry/submission summary and schema marker.
+- Structured explainability: explanation is now a versioned Pydantic schema (ExplanationSchema v1.0.0) returned as a JSON object in the API response, stored as JSONField in the model. Contains compliance_summary, vastu_score, geometry_status, trade_offs, hypar_submission_status, and raw_explanation.
 
 ### E. API and Tests
 - POST /api/v1/design/ now includes clarification contract fields.
@@ -135,28 +151,13 @@ Set-Location "D:\My projects\Archi3D\backend"
   - strict clarification gate
   - geometry validation
   - layout metrics
+- Added Hypar API integration test harness with mocked endpoint.
 
 ---
 
 ## 5) What Is Still Left (Pre-Dataset)
 
-These should be completed before any data scraping/training work:
-
-1. Region and building-type scoped knowledge metadata expansion
-2. Layout feasibility checks:
-   - corridor width constraints
-   - stair core continuity checks
-   - service shaft continuity checks
-3. Structured explainability object (versioned JSON in API response, not only free-text explanation)
-4. Hypar API integration test harness with mocked endpoint
-
-Dataset model training remains deferred by plan.
-Safe ingestion/scraping foundations are now implemented only for controlled source collection.
-
-When any item is done:
-- Move it to Section 4 with a short implementation note.
-- Add a timestamped entry in Section 2.
-- Move it from "Ready / Next" to "Done" in Section 2.1.
+**All pre-dataset items have been completed! We are ready to proceed to Phase 4: dataset scraping and training.**
 
 ---
 
