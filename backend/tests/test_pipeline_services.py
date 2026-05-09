@@ -1,0 +1,358 @@
+import pytest
+import json
+
+from services.bylaw_loader import load_bylaws
+from services.geometry_validator import validate_layout_geometry
+from services.input_parser import parse_design_input
+from services.layout_generator import generate_conceptual_layout
+from services.pipeline import run_design_pipeline
+from services.vectorless_rag import VectorlessKnowledgeRetriever
+
+
+@pytest.mark.unit
+def test_vectorless_retriever_returns_chunks(tmp_path):
+    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=tmp_path)
+    results = retriever.retrieve(
+        query="residential kitchen staircase ventilation",
+        region_id="india_mumbai",
+        building_type="residential",
+        top_k=3,
+    )
+
+    assert len(results) == 3
+    assert all("title" in item for item in results)
+    assert all("score" in item for item in results)
+    assert all("section_id" in item for item in results)
+    assert all("doc_id" in item for item in results)
+
+
+@pytest.mark.unit
+def test_vectorless_retriever_respects_region_and_building_scope(tmp_path):
+    knowledge_file = tmp_path / "scoped_chunks.json"
+    knowledge_file.write_text(
+        json.dumps(
+            {
+                "doc_id": "arch_casebook",
+                "chunks": [
+                    {
+                        "id": "mumbai_res_rule",
+                        "title": "Mumbai residential FAR",
+                        "text": "Mumbai residential FAR clause with setback compliance guidance.",
+                        "region_id": "india_mumbai",
+                        "building_type": "residential",
+                        "tags": ["far", "setback"],
+                        "entities": ["far", "setback", "residential"],
+                        "section_path": ["Rules", "Mumbai", "Residential"],
+                        "page_no": 12,
+                    },
+                    {
+                        "id": "nyc_res_rule",
+                        "title": "NYC residential FAR",
+                        "text": "NYC low density FAR clause.",
+                        "region_id": "usa_nyc",
+                        "building_type": "residential",
+                        "tags": ["far"],
+                        "section_path": ["Rules", "NYC", "Residential"],
+                    },
+                    {
+                        "id": "mumbai_commercial_rule",
+                        "title": "Mumbai commercial FAR",
+                        "text": "Commercial FAR and parking guidance.",
+                        "region_id": "india_mumbai",
+                        "building_type": "commercial",
+                        "tags": ["far", "parking"],
+                        "section_path": ["Rules", "Mumbai", "Commercial"],
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=tmp_path)
+    results = retriever.retrieve(
+        query="mumbai residential far setback",
+        region_id="india_mumbai",
+        building_type="residential",
+        top_k=5,
+    )
+
+    assert len(results) >= 1
+    assert all(item["region_id"] in {"all", "india_mumbai"} for item in results)
+    assert all(item["building_type"] in {"all", "residential"} for item in results)
+    assert results[0]["id"] == "mumbai_res_rule"
+
+
+@pytest.mark.unit
+def test_vectorless_retriever_includes_markdown_section_metadata(tmp_path):
+    md = tmp_path / "arch_doc.md"
+    md.write_text(
+        """
+# Residential Planning
+## Kitchen and Dining
+Keep kitchen adjacent to dining with ventilation.
+
+## Stair Placement
+Use central stair for efficient circulation.
+""".strip(),
+        encoding="utf-8",
+    )
+
+    retriever = VectorlessKnowledgeRetriever(knowledge_raw_dir=tmp_path)
+    results = retriever.retrieve(
+        query="kitchen dining ventilation",
+        region_id="india_mumbai",
+        building_type="residential",
+        top_k=3,
+    )
+
+    assert len(results) >= 1
+    assert all(isinstance(item.get("section_path"), list) for item in results)
+    assert any(item.get("section_path") for item in results)
+    assert all(item.get("section_id") for item in results)
+
+
+@pytest.mark.unit
+def test_layout_generation_respects_coverage_limit():
+    bylaws = load_bylaws("india_mumbai", "residential")
+
+    compliance_report = {
+        "adjusted_floors": 2,
+        "buildable_area": {
+            "plot_area_sqm": 1200.0,
+            "buildable_width_m": 27.0,
+            "buildable_depth_m": 34.0,
+        },
+    }
+
+    parsed_input = {
+        "rooms": ["living_room", "kitchen", "bedroom", "bedroom", "bathroom"],
+        "preferences": {"parking": True},
+        "num_floors": 2,
+    }
+
+    result = generate_conceptual_layout(parsed_input, compliance_report, bylaws)
+    footprint = result["footprint"]
+    max_allowed_area = compliance_report["buildable_area"]["plot_area_sqm"] * (
+        bylaws.max_plot_coverage_pct / 100.0
+    )
+
+    assert footprint["area_sqm"] <= max_allowed_area + 1e-6
+    assert len(result["zones"]) > 0
+    assert "layout_metrics" in result
+    assert 0.0 <= result["layout_metrics"]["overall_layout_quality_score"] <= 100.0
+
+
+@pytest.mark.unit
+def test_layout_generation_has_adjacency_and_circulation_scores():
+    bylaws = load_bylaws("india_mumbai", "residential")
+
+    compliance_report = {
+        "adjusted_floors": 2,
+        "buildable_area": {
+            "plot_area_sqm": 1200.0,
+            "buildable_width_m": 27.0,
+            "buildable_depth_m": 34.0,
+        },
+    }
+
+    parsed_input = {
+        "rooms": [
+            "living_room",
+            "kitchen",
+            "bedroom",
+            "bedroom",
+            "bathroom",
+            "staircase",
+            "parking",
+        ],
+        "preferences": {"parking": True},
+        "num_floors": 2,
+        "plot_facing_direction": "north",
+    }
+
+    result = generate_conceptual_layout(parsed_input, compliance_report, bylaws)
+    metrics = result["layout_metrics"]
+
+    assert "floor_metrics" in metrics
+    assert len(metrics["floor_metrics"]) >= 1
+    for floor_metric in metrics["floor_metrics"]:
+        assert 0.0 <= floor_metric["adjacency_score"] <= 100.0
+        assert 0.0 <= floor_metric["circulation_score"] <= 100.0
+        assert 0.0 <= floor_metric["layout_quality_score"] <= 100.0
+
+
+@pytest.mark.unit
+def test_pipeline_returns_hypar_artifact(settings, tmp_path):
+    settings.ARCHI3D = {
+        **settings.ARCHI3D,
+        "OUTPUTS_DIR": tmp_path,
+    }
+
+    result = run_design_pipeline(
+        {
+            "raw_text": "Design a 2-floor residential house on a 30x40 plot with parking and vastu",
+            "region": "india_mumbai",
+            "building_type": "residential",
+            "plot_width_m": 30,
+            "plot_depth_m": 40,
+            "num_floors": 2,
+            "num_units": 1,
+            "plot_facing_direction": "east",
+            "preferences": {"parking": True},
+            "use_vastu": True,
+        }
+    )
+
+    assert result["status"] in {"completed", "layout_generated"}
+    assert isinstance(result["layout_zones"], list)
+    assert isinstance(result.get("design_brief"), dict)
+    assert result["design_brief"]["priorities"][0] == "Max usable area"
+    assert "zoning_note" in result["design_brief"]
+    assert "circulation_note" in result["design_brief"]
+    if result["hypar_json_path"]:
+        assert result["hypar_json_path"].endswith(".json")
+        assert (tmp_path / result["hypar_json_path"]).exists()
+        ref = result.get("hypar_elements_reference_path", "")
+        assert ref.endswith(".json")
+        assert (tmp_path / ref).exists()
+        payload = json.loads((tmp_path / ref).read_text(encoding="utf-8"))
+        assert payload.get("format") == "archi3d.elements_reference/v1"
+        assert "hypar-io.github.io/Elements" in payload["documentation"]["hypar_elements_api"]
+
+
+@pytest.mark.unit
+def test_input_parser_marks_inferred_fields_for_clarification():
+    parsed, meta = parse_design_input(
+        incoming_data={
+            "raw_text": "Design a 2-floor house with parking",
+        },
+        ollama_model="unused",
+        ollama_host="http://localhost:11434",
+    )
+
+    assert "plot_width_m" in parsed["_inferred_fields"]
+    assert "plot_depth_m" in parsed["_inferred_fields"]
+    assert meta["requires_clarification"] is True
+    assert len(meta["clarification_questions"]) >= 1
+
+
+@pytest.mark.unit
+def test_input_parser_adds_vastu_direction_question_when_needed():
+    parsed, meta = parse_design_input(
+        incoming_data={
+            "raw_text": "Design a vastu compliant home",
+            "use_vastu": True,
+        },
+        ollama_model="unused",
+        ollama_host="http://localhost:11434",
+    )
+
+    assert parsed["use_vastu"] is True
+    assert "plot_facing_direction" in meta["missing_fields"]
+    assert any("plot face" in q.lower() or "direction" in q.lower() for q in meta["clarification_questions"])
+
+
+@pytest.mark.unit
+def test_pipeline_strict_clarification_gate_skips_generation(settings, tmp_path):
+    settings.ARCHI3D = {
+        **settings.ARCHI3D,
+        "OUTPUTS_DIR": tmp_path,
+    }
+
+    result = run_design_pipeline(
+        {
+            "raw_text": "Design a vastu-ready house",
+        }
+    )
+
+    assert result["requires_clarification"] is True
+    assert result["status"] == "received"
+    assert result["layout_zones"] == []
+    assert result["hypar_json_path"] == ""
+
+
+@pytest.mark.unit
+def test_pipeline_runtime_hypar_credentials_are_used_but_not_persisted(settings, tmp_path, monkeypatch):
+    settings.ARCHI3D = {
+        **settings.ARCHI3D,
+        "OUTPUTS_DIR": tmp_path,
+        "HYPAR_API_URL": "",
+        "HYPAR_API_TOKEN": "",
+    }
+
+    captured = {}
+
+    def fake_submit(payload, api_url, api_token):
+        captured["api_url"] = api_url
+        captured["api_token"] = api_token
+        return {"submitted": True, "status_code": 200, "response": {"ok": True}}
+
+    monkeypatch.setattr("services.pipeline.submit_hypar_payload", fake_submit)
+
+    result = run_design_pipeline(
+        {
+            "raw_text": "Design a 2-floor residential house in Mumbai on a 30x40 plot with parking",
+            "region": "india_mumbai",
+            "building_type": "residential",
+            "plot_width_m": 30,
+            "plot_depth_m": 40,
+            "num_floors": 2,
+            "num_units": 1,
+            "plot_facing_direction": "north",
+            "preferences": {"parking": True},
+            "hypar_api_url": "https://example.com/hypar/submit",
+            "hypar_api_token": "test-token-123",
+        }
+    )
+
+    assert captured["api_url"] == "https://example.com/hypar/submit"
+    assert captured["api_token"] == "test-token-123"
+    assert "_hypar_api_url" not in result["parsed_input"]
+    assert "_hypar_api_token" not in result["parsed_input"]
+    assert "hypar_api_url" not in result["parsed_input"]
+    assert "hypar_api_token" not in result["parsed_input"]
+
+
+@pytest.mark.unit
+def test_parser_does_not_require_plot_dimensions_when_present_in_raw_text():
+    parsed, meta = parse_design_input(
+        incoming_data={
+            "raw_text": "Design a 2-floor house in Mumbai on a 30x40 metre plot",
+        },
+        ollama_model="unused",
+        ollama_host="http://localhost:11434",
+    )
+
+    assert parsed["plot_width_m"] == 30.0
+    assert parsed["plot_depth_m"] == 40.0
+    assert meta["requires_clarification"] is False
+
+
+@pytest.mark.unit
+def test_geometry_validator_detects_overlap_issues():
+    zones = [
+        {
+            "id": "zone_1",
+            "room_type": "living_room",
+            "floor": 0,
+            "x": 0.0,
+            "y": 0.0,
+            "width_m": 5.0,
+            "depth_m": 5.0,
+        },
+        {
+            "id": "zone_2",
+            "room_type": "kitchen",
+            "floor": 0,
+            "x": 4.0,
+            "y": 2.0,
+            "width_m": 4.0,
+            "depth_m": 4.0,
+        },
+    ]
+
+    result = validate_layout_geometry(zones)
+
+    assert result["valid"] is False
+    assert len(result["overlap_issues"]) >= 1

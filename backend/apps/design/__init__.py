@@ -1,0 +1,1 @@
+"""apps/design package init."""

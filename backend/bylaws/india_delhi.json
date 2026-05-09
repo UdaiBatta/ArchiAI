@@ -1,0 +1,64 @@
+{
+  "_comment": "Delhi Building Bylaws — Based on Master Plan for Delhi 2041 (MPD 2041) and NDMC Building Bye-Laws",
+  "_source": "Delhi Development Authority (DDA) MPD 2041, Building Bye-Laws 2016",
+  "_last_updated": "2024-01",
+  "_units": "All distances in metres (m), areas in sq.m, percentages as numbers (50 = 50%)",
+
+  "region_id": "india_delhi",
+  "region_name": "India — Delhi (MPD 2041 / DDA Bye-Laws)",
+
+  "building_types": {
+
+    "residential": {
+      "_notes": [
+        "Applicable to plotted residential development (individual plots)",
+        "Rules vary by plot size — this is for 100-300 sq.m plots (most common category)",
+        "Front setback may be increased for plots on wider roads",
+        "FAR includes basement area (if any) — here simplified without basement"
+      ],
+
+      "setback_front_m": 2.0,
+      "setback_rear_m": 1.5,
+      "setback_side_m": 1.0,
+
+      "max_far": 1.75,
+      "max_height_m": 12.5,
+      "max_floors": 4,
+      "max_plot_coverage_pct": 50.0,
+      "floor_height_m": 3.0,
+
+      "parking": {
+        "min_stalls_per_unit": 1.0,
+        "stall_width_m": 2.4,
+        "stall_depth_m": 5.0,
+        "aisle_width_m": 3.5,
+        "notes": "Mandatory for plots ≥ 100 sq.m. One ECS minimum per residential unit."
+      }
+    },
+
+    "commercial": {
+      "_notes": [
+        "Local shopping centre / neighbourhood commercial zone",
+        "Higher FAR available for Mixed Use Zones — simplified here"
+      ],
+
+      "setback_front_m": 3.0,
+      "setback_rear_m": 2.0,
+      "setback_side_m": 1.5,
+
+      "max_far": 2.5,
+      "max_height_m": 18.0,
+      "max_floors": 5,
+      "max_plot_coverage_pct": 60.0,
+      "floor_height_m": 3.5,
+
+      "parking": {
+        "min_stalls_per_unit": 2.0,
+        "stall_width_m": 2.5,
+        "stall_depth_m": 5.0,
+        "aisle_width_m": 4.0,
+        "notes": "2 ECS per 100 sq.m of commercial floor area."
+      }
+    }
+  }
+}

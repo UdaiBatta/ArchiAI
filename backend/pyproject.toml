@@ -1,0 +1,37 @@
+[project]
+name = "archi3d-backend"
+version = "0.1.0"
+description = "Archi3D backend service"
+readme = "../DEVELOPER_GUIDE.md"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=4.2,<5.2",
+    "djangorestframework>=3.14",
+    "djangorestframework-simplejwt>=5.3",
+    "channels>=4.1",
+    "channels-redis>=4.2",
+    "celery>=5.6",
+    "django-cors-headers>=4.3",
+    "django-environ>=0.11",
+    "psycopg[binary]>=3.2",
+    "Pillow>=10.0",
+    "reportlab>=4.5",
+    "ezdxf>=1.4",
+    "ollama>=0.3",
+    "pydantic>=2.5",
+    "rank-bm25>=0.2.2",
+    "trimesh>=4.0",
+    "numpy>=1.24",
+    "python-dateutil>=2.8",
+    "pypdf>=6.10.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4",
+    "pytest-django>=4.7",
+    "daphne>=4.2",
+]
+
+[tool.uv]
+default-groups = ["dev"]

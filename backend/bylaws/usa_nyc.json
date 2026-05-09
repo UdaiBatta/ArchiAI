@@ -1,0 +1,69 @@
+{
+  "_comment": "New York City Zoning — Residential R2 Low-Density Zone",
+  "_source": "NYC Zoning Resolution Chapter 2 (NYC Department of City Planning)",
+  "_last_updated": "2024-01",
+  "_units": "All distances in metres (m — original rules converted from feet), areas in sq.m, percentages as numbers",
+  "_conversion_note": "1 foot = 0.3048 metres",
+
+  "region_id": "usa_nyc",
+  "region_name": "USA — New York City (Zoning Resolution R2 Zone)",
+
+  "building_types": {
+
+    "residential": {
+      "_notes": [
+        "R2 zone: Low-density detached single-family or two-family residences",
+        "Front setback (yard) = 10ft = 3.05m",
+        "Rear setback = 30ft = 9.14m",
+        "Side yards: combined min 13ft (3.96m), each min 5ft (1.52m)",
+        "FAR = 0.5 (very low — NYC R2 preserves suburban character)",
+        "Max height = 35ft = 10.67m with sky exposure plane rules",
+        "Max lot coverage = 30% of lot area",
+        "Parking: 1 stall per dwelling unit required"
+      ],
+
+      "setback_front_m": 3.05,
+      "setback_rear_m": 9.14,
+      "setback_side_m": 1.52,
+
+      "max_far": 0.5,
+      "max_height_m": 10.67,
+      "max_floors": 2,
+      "max_plot_coverage_pct": 30.0,
+      "floor_height_m": 2.9,
+
+      "parking": {
+        "min_stalls_per_unit": 1.0,
+        "stall_width_m": 2.74,
+        "stall_depth_m": 5.49,
+        "aisle_width_m": 3.66,
+        "notes": "1 off-street parking space required per dwelling unit in R2 zone."
+      }
+    },
+
+    "commercial": {
+      "_notes": [
+        "C1-1 overlay zone (neighbourhood commercial) — simplified rules",
+        "Commercial zones in NYC are highly complex; consult an architect for full compliance"
+      ],
+
+      "setback_front_m": 0.0,
+      "setback_rear_m": 4.57,
+      "setback_side_m": 0.0,
+
+      "max_far": 1.0,
+      "max_height_m": 10.67,
+      "max_floors": 3,
+      "max_plot_coverage_pct": 100.0,
+      "floor_height_m": 3.0,
+
+      "parking": {
+        "min_stalls_per_unit": 1.0,
+        "stall_width_m": 2.74,
+        "stall_depth_m": 5.49,
+        "aisle_width_m": 3.66,
+        "notes": "Varies significantly by use type. Consult NYC Zoning Resolution §36."
+      }
+    }
+  }
+}

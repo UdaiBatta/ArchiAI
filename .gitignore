@@ -1,0 +1,76 @@
+# Virtual environments
+.venv/
+env/
+
+# Python cache
+__pycache__/
+**/__pycache__/
+**/__pycache__/**
+*.pyc
+*.pyc.*
+*.pyo
+*.pyd
+*.py[cod]
+*$py.class
+
+# Django / local databases
+db.sqlite3
+*.sqlite3
+
+# Environment variables
+.env
+.env.*
+
+# Logs / temp files
+*.log
+*.tmp
+*.temp
+
+# IDE / editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# Test caches
+.pytest_cache/
+.tmp_pytest/
+.coverage
+htmlcov/
+
+# Generated outputs
+outputs/
+outputs/**
+backend/outputs/
+backend/outputs/**
+
+# Knowledge / ingestion data
+knowledge/
+knowledge/**
+backend/knowledge/
+backend/knowledge/**
+backend/knowledge/source_docs/
+backend/knowledge/source_docs_quick/
+backend/knowledge/source_docs_batch*/
+backend/knowledge/tmp_ingest/
+backend/knowledge/raw/
+
+# External cloned repos / models
+Graph2plan-master/
+Graph2plan-master/**
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+backend/.env
+backend/.venv/
+backend/venv/
+backend/db.sqlite3
+backend/temp_migrations.sqlite3
+
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local

@@ -1,0 +1,62 @@
+{
+  "_comment": "Default / Fallback Building Bylaws — Conservative generic rules",
+  "_source": "Conservative synthesis of common South Asian residential bylaws",
+  "_last_updated": "2024-01",
+  "_units": "All distances in metres (m), areas in sq.m, percentages as numbers",
+  "_note": "This file is used when no specific region is matched. Values are intentionally conservative (stricter than average) to prevent non-compliance. Replace with real local bylaws as soon as possible.",
+
+  "region_id": "default",
+  "region_name": "Default (Conservative Fallback)",
+
+  "building_types": {
+
+    "residential": {
+      "_notes": [
+        "Conservative defaults — always within typical Indian municipal limits",
+        "If you know your region, specify it in the API request for accurate rules"
+      ],
+
+      "setback_front_m": 3.0,
+      "setback_rear_m": 3.0,
+      "setback_side_m": 1.5,
+
+      "max_far": 1.5,
+      "max_height_m": 12.0,
+      "max_floors": 3,
+      "max_plot_coverage_pct": 50.0,
+      "floor_height_m": 3.0,
+
+      "parking": {
+        "min_stalls_per_unit": 1.0,
+        "stall_width_m": 2.5,
+        "stall_depth_m": 5.0,
+        "aisle_width_m": 3.5,
+        "notes": "1 parking stall per unit assumed."
+      }
+    },
+
+    "commercial": {
+      "_notes": [
+        "Conservative defaults for small commercial buildings"
+      ],
+
+      "setback_front_m": 3.0,
+      "setback_rear_m": 3.0,
+      "setback_side_m": 1.5,
+
+      "max_far": 2.0,
+      "max_height_m": 15.0,
+      "max_floors": 4,
+      "max_plot_coverage_pct": 55.0,
+      "floor_height_m": 3.5,
+
+      "parking": {
+        "min_stalls_per_unit": 2.0,
+        "stall_width_m": 2.5,
+        "stall_depth_m": 5.0,
+        "aisle_width_m": 4.0,
+        "notes": "2 ECS per 100 sq.m commercial area assumed."
+      }
+    }
+  }
+}

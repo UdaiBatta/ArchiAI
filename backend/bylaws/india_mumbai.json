@@ -1,0 +1,64 @@
+{
+  "_comment": "Mumbai Building Bylaws — Based on DCPR 2034 (Development Control and Promotion Regulations)",
+  "_source": "Maharashtra Government DCPR 2034, Chapter 6 — Building Regulations",
+  "_last_updated": "2024-01",
+  "_units": "All distances in metres (m), areas in sq.m, percentages as numbers (50 = 50%)",
+
+  "region_id": "india_mumbai",
+  "region_name": "India — Mumbai (DCPR 2034)",
+
+  "building_types": {
+
+    "residential": {
+      "_notes": [
+        "Applicable to individual residential plots (row houses, bungalows, villas)",
+        "For plots up to 500 sq.m in residential zones R1/R2",
+        "FAR 1.5 is the base FSI; premium FSI available but not included here",
+        "Parking requirement waived for plots under 18m road width in older zones"
+      ],
+
+      "setback_front_m": 3.0,
+      "setback_rear_m": 3.0,
+      "setback_side_m": 1.5,
+
+      "max_far": 1.5,
+      "max_height_m": 15.0,
+      "max_floors": 4,
+      "max_plot_coverage_pct": 50.0,
+      "floor_height_m": 3.0,
+
+      "parking": {
+        "min_stalls_per_unit": 1.0,
+        "stall_width_m": 2.5,
+        "stall_depth_m": 5.0,
+        "aisle_width_m": 3.5,
+        "notes": "1 stall per unit for 2BHK and above. ECS (Equivalent Car Spaces) may be required for plots >300 sqm."
+      }
+    },
+
+    "commercial": {
+      "_notes": [
+        "Applicable to ground-floor commercial (shops, offices) on commercial-zoned plots",
+        "Higher FAR available on arterial roads — simplified version used here"
+      ],
+
+      "setback_front_m": 3.0,
+      "setback_rear_m": 3.0,
+      "setback_side_m": 1.5,
+
+      "max_far": 2.0,
+      "max_height_m": 18.0,
+      "max_floors": 5,
+      "max_plot_coverage_pct": 60.0,
+      "floor_height_m": 3.5,
+
+      "parking": {
+        "min_stalls_per_unit": 2.0,
+        "stall_width_m": 2.5,
+        "stall_depth_m": 5.0,
+        "aisle_width_m": 4.0,
+        "notes": "2 ECS per 100 sq.m of commercial floor area."
+      }
+    }
+  }
+}
