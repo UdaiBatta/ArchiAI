@@ -70,9 +70,11 @@ export default function Landing() {
 
       // Fall back to demo layout
       const fallback = generateFallbackLayout({
-        plotWidth: parseFloat(settings.plotWidth),
-        plotDepth: parseFloat(settings.plotDepth),
-        numFloors: parseInt(settings.numFloors),
+        plotWidth:    parseFloat(settings.plotWidth),
+        plotDepth:    parseFloat(settings.plotDepth),
+        numFloors:    parseInt(settings.numFloors),
+        prompt,
+        buildingType: settings.buildingType,
       });
 
       sessionStorage.setItem('currentDesign', JSON.stringify(fallback));

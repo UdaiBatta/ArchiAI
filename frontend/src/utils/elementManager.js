@@ -1,114 +1,149 @@
 /**
- * Element Manager - Handle CRUD operations for zones/elements
+ * ElementManager — CRUD for zones/rooms
+ * All elements follow the canonical shape:
+ *   { id, room_type, label, x, y, z, width, depth, height,
+ *     floor, rotation, visible, locked, area }
  */
+
+const DEFAULT_DIMS = {
+  living_room: { width: 5,   depth: 4,   height: 3.5 },
+  bedroom:     { width: 4,   depth: 3.5, height: 3.5 },
+  kitchen:     { width: 3.5, depth: 3,   height: 3.0 },
+  bathroom:    { width: 2,   depth: 2,   height: 2.7 },
+  staircase:   { width: 2.5, depth: 3.5, height: 3.2 },
+  parking:     { width: 6,   depth: 3,   height: 2.5 },
+  balcony:     { width: 3,   depth: 2,   height: 2.8 },
+  office:      { width: 5,   depth: 4,   height: 3.2 },
+  corridor:    { width: 2,   depth: 5,   height: 3.0 },
+  terrace:     { width: 5,   depth: 4,   height: 2.5 },
+  generic:     { width: 4,   depth: 4,   height: 3.0 },
+};
+
+const LABELS = {
+  living_room: 'Living Room',
+  bedroom:     'Bedroom',
+  kitchen:     'Kitchen',
+  bathroom:    'Bathroom',
+  staircase:   'Staircase',
+  parking:     'Parking',
+  balcony:     'Balcony',
+  office:      'Office',
+  corridor:    'Corridor',
+  terrace:     'Terrace',
+  generic:     'Room',
+};
 
 export class ElementManager {
   static generateId() {
-    return `zone_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `zone_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   }
 
   static createElement(type, options = {}) {
-    const defaultDimensions = {
-      living_room: { width: 5, depth: 4, height: 3 },
-      bedroom: { width: 4, depth: 3.5, height: 3 },
-      kitchen: { width: 3.5, depth: 3, height: 3 },
-      bathroom: { width: 2, depth: 2, height: 2.7 },
-      staircase: { width: 2.5, depth: 3.5, height: 3.2 },
-      parking: { width: 6, depth: 3, height: 2.5 },
-      balcony: { width: 3, depth: 2, height: 2.8 },
-      office: { width: 4, depth: 3.5, height: 3 },
-      corridor: { width: 2, depth: 4, height: 3 },
-      terrace: { width: 5, depth: 4, height: 2.5 },
-      generic: { width: 4, depth: 3, height: 3 },
-    };
-
-    const roomTypeLabels = {
-      living_room: 'Living Room',
-      bedroom: 'Bedroom',
-      kitchen: 'Kitchen',
-      bathroom: 'Bathroom',
-      staircase: 'Staircase',
-      parking: 'Parking',
-      balcony: 'Balcony',
-      office: 'Office',
-      corridor: 'Corridor',
-      terrace: 'Terrace',
-      generic: 'Room',
-    };
-
-    const dims = defaultDimensions[type] || defaultDimensions.generic;
+    const dims = DEFAULT_DIMS[type] || DEFAULT_DIMS.generic;
+    const w = options.width  || dims.width;
+    const d = options.depth  || dims.depth;
 
     return {
-      id: ElementManager.generateId(),
+      id:        ElementManager.generateId(),
       room_type: type,
-      label: roomTypeLabels[type] || `Room ${Math.floor(Math.random() * 1000)}`,
-      width: options.width || dims.width,
-      depth: options.depth || dims.depth,
-      height: options.height || dims.height,
-      x: options.x || 0,
-      y: options.y || 0,
-      z: options.z || 0,
-      floor: options.floor || 1,
-      rotation: options.rotation || 0,
+      label:     LABELS[type] || 'Room',
+      x:         options.x        ?? 0,
+      y:         options.y        ?? 0,
+      z:         options.z        ?? 0,
+      width:     w,
+      depth:     d,
+      height:    options.height   ?? dims.height,
+      floor:     options.floor    ?? 1,
+      rotation:  options.rotation ?? 0,
+      visible:   options.visible  ?? true,
+      locked:    options.locked   ?? false,
+      area:      +(w * d).toFixed(2),
     };
   }
 
-  static addElement(zones, type, position = { x: 0, y: 0 }) {
-    const newElement = ElementManager.createElement(type, {
-      x: position.x,
-      y: position.y,
-    });
-    return [...zones, newElement];
+  /**
+   * Place a new element near the centroid of existing zones,
+   * offset slightly so it doesn't overlap exactly.
+   */
+  static addElement(zones, type, positionHint = null) {
+    let x = 0, y = 0;
+
+    if (positionHint) {
+      x = positionHint.x;
+      y = positionHint.y;
+    } else if (zones.length > 0) {
+      // Centroid of existing layout
+      const cx = zones.reduce((s, z) => s + z.x + z.width  / 2, 0) / zones.length;
+      const cy = zones.reduce((s, z) => s + z.y + z.depth / 2, 0) / zones.length;
+
+      // Find rightmost edge and place next to it
+      const maxX = Math.max(...zones.map((z) => z.x + z.width));
+      const dims = DEFAULT_DIMS[type] || DEFAULT_DIMS.generic;
+      x = maxX + 0.5;
+      y = cy - dims.depth / 2;
+    }
+
+    const newEl = ElementManager.createElement(type, { x, y });
+    return {
+      zones: [...zones, newEl],
+      newId: newEl.id,
+    };
   }
 
   static deleteElement(zones, id) {
-    return zones.filter((zone) => zone.id !== id);
+    return zones.filter((z) => z.id !== id);
   }
 
-  static duplicateElement(zones, id, offset = { x: 1, y: 1 }) {
+  static duplicateElement(zones, id, offset = { x: 2, y: 2 }) {
     const original = zones.find((z) => z.id === id);
-    if (!original) return zones;
+    if (!original) return { zones, newId: null };
 
-    const duplicate = {
+    const dup = {
       ...original,
-      id: ElementManager.generateId(),
+      id:    ElementManager.generateId(),
       label: `${original.label} (Copy)`,
-      x: original.x + offset.x,
-      y: original.y + offset.y,
+      x:     original.x + offset.x,
+      y:     original.y + offset.y,
     };
 
-    return [...zones, duplicate];
+    return { zones: [...zones, dup], newId: dup.id };
   }
 
   static updateElement(zones, id, updates) {
-    return zones.map((zone) =>
-      zone.id === id ? { ...zone, ...updates } : zone
-    );
+    return zones.map((z) => {
+      if (z.id !== id) return z;
+      const updated = { ...z, ...updates };
+      // Keep area in sync if dimensions changed
+      if (updates.width !== undefined || updates.depth !== undefined) {
+        updated.area = +((updated.width || z.width) * (updated.depth || z.depth)).toFixed(2);
+      }
+      return updated;
+    });
   }
 
-  static moveElement(zones, id, dx, dy) {
-    return zones.map((zone) =>
-      zone.id === id ? { ...zone, x: zone.x + dx, y: zone.y + dy } : zone
+  static moveElement(zones, id, dx, dy, dz = 0) {
+    return zones.map((z) =>
+      z.id === id ? { ...z, x: z.x + dx, y: z.y + dy, z: (z.z || 0) + dz } : z
     );
   }
 
   static resizeElement(zones, id, width, depth, height = null) {
-    return zones.map((zone) => {
-      if (zone.id === id) {
-        return {
-          ...zone,
-          width: Math.max(0.5, width),
-          depth: Math.max(0.5, depth),
-          ...(height !== null && { height: Math.max(0.5, height) }),
-        };
-      }
-      return zone;
+    return zones.map((z) => {
+      if (z.id !== id) return z;
+      const w = Math.max(0.5, width);
+      const d = Math.max(0.5, depth);
+      return {
+        ...z,
+        width: w, depth: d,
+        ...(height !== null && { height: Math.max(0.5, height) }),
+        area: +(w * d).toFixed(2),
+      };
     });
   }
 
   static rotateElement(zones, id, angle) {
-    return zones.map((zone) =>
-      zone.id === id ? { ...zone, rotation: (zone.rotation + angle) % 360 } : zone
+    return zones.map((z) =>
+      z.id === id ? { ...z, rotation: ((z.rotation || 0) + angle) % 360 } : z
     );
   }
 
@@ -120,45 +155,27 @@ export class ElementManager {
     return zones.filter((z) => z.floor === floor);
   }
 
-  static validateElement(element) {
-    return (
-      element.id &&
-      element.room_type &&
-      element.width > 0 &&
-      element.depth > 0 &&
-      element.height > 0
-    );
+  static validateElement(el) {
+    return el && el.id && el.room_type && el.width > 0 && el.depth > 0 && el.height > 0;
   }
 
   static calculateBounds(zones) {
-    if (zones.length === 0) {
-      return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-    }
-
-    let minX = Infinity,
-      maxX = -Infinity,
-      minY = Infinity,
-      maxY = -Infinity;
-
-    zones.forEach((zone) => {
-      minX = Math.min(minX, zone.x);
-      maxX = Math.max(maxX, zone.x + zone.width);
-      minY = Math.min(minY, zone.y);
-      maxY = Math.max(maxY, zone.y + zone.depth);
+    if (!zones.length) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    zones.forEach((z) => {
+      minX = Math.min(minX, z.x);
+      maxX = Math.max(maxX, z.x + z.width);
+      minY = Math.min(minY, z.y);
+      maxY = Math.max(maxY, z.y + z.depth);
     });
-
     return { minX, maxX, minY, maxY };
   }
 
   static centerLayout(zones) {
-    const bounds = ElementManager.calculateBounds(zones);
-    const centerX = (bounds.minX + bounds.maxX) / 2;
-    const centerY = (bounds.minY + bounds.maxY) / 2;
-
-    return zones.map((zone) => ({
-      ...zone,
-      x: zone.x - centerX + 15,
-      y: zone.y - centerY + 20,
-    }));
+    if (!zones.length) return zones;
+    const b   = ElementManager.calculateBounds(zones);
+    const cx  = (b.minX + b.maxX) / 2;
+    const cy  = (b.minY + b.maxY) / 2;
+    return zones.map((z) => ({ ...z, x: +(z.x - cx).toFixed(3), y: +(z.y - cy).toFixed(3) }));
   }
 }

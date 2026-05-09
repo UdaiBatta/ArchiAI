@@ -840,3 +840,113 @@
     height: 100%;
   }
 }
+
+/* ============================================
+   TRANSFORM TOOLBAR (3D mode)
+   ============================================ */
+
+.transform-toolbar { gap: 3px; }
+
+.btn-toolbar.mode-active {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-color: var(--accent-primary);
+  color: var(--bg-primary);
+  font-weight: 700;
+  box-shadow: 0 0 10px var(--accent-muted);
+}
+
+/* ============================================
+   TRANSFORM MODE BADGE (canvas overlay)
+   ============================================ */
+
+.transform-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(17, 17, 17, 0.80);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  pointer-events: none;
+  letter-spacing: 0.3px;
+  z-index: 10;
+}
+
+.snap-dot {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================
+   INSPECTOR EXTRAS
+   ============================================ */
+
+.inspector-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted-dark);
+  padding: 8px 0 2px 0;
+}
+
+.inspector-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.btn.btn-danger-sm {
+  background: transparent;
+  border-color: rgba(239, 68, 68, 0.4);
+  color: rgb(239, 68, 68);
+}
+
+.btn.btn-danger-sm:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgb(239, 68, 68);
+}
+
+/* ============================================
+   LAYER FLOOR BADGE
+   ============================================ */
+
+.layer-floor {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-primary);
+  background: var(--accent-muted);
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   EXPORT MENU FIX
+   ============================================ */
+
+.export-menu { flex-direction: column; }
+
