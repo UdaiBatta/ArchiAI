@@ -1,21 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-
-/* ─── colour palette ─────────────────────────────────── */
-const COLOR_MAP = {
-  living_room: 0x3b82f6,
-  kitchen:     0xf59e0b,
-  bedroom:     0xec4899,
-  bathroom:    0x10b981,
-  staircase:   0x8b5cf6,
-  parking:     0x4b5563,
-  balcony:     0x14b8a6,
-  office:      0x6366f1,
-  corridor:    0x6b7280,
-  terrace:     0x06b6d4,
-  generic:     0x9ca3af,
-};
+import { getColorThree } from './colors.js';
+import { CANVAS_CONSTANTS, CANVAS_COLORS } from './constants.js';
 
 /**
  * Canvas3D — Hypar-style Three.js editor
@@ -64,7 +51,7 @@ export class Canvas3D {
 
     this.mode       = 'select';   // select | translate | rotate | scale
     this.snapToGrid = true;
-    this.snapSize   = 1.0;
+    this.snapSize   = CANVAS_CONSTANTS.SNAP_SIZE;
 
     this._isTransforming = false;
     this._clickStart     = null;
@@ -88,8 +75,8 @@ export class Canvas3D {
 
     /* Scene */
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0d1117);
-    this.scene.fog = new THREE.FogExp2(0x0d1117, 0.008);
+    this.scene.background = new THREE.Color(CANVAS_COLORS.BG_3D);
+    this.scene.fog = new THREE.FogExp2(CANVAS_COLORS.BG_3D, 0.008);
 
     /* Camera */
     this.camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 2000);
@@ -259,7 +246,7 @@ export class Canvas3D {
   }
 
   _buildMesh(zone) {
-    const color = COLOR_MAP[zone.room_type] || 0x9ca3af;
+    const color = getColorThree(zone.room_type);
     const w = Math.max(0.5, zone.width  || 4);
     const h = Math.max(0.5, zone.height || 3);
     const d = Math.max(0.5, zone.depth  || 4);

@@ -2,6 +2,9 @@
  * 2D Canvas rendering utilities
  */
 
+import { getColorHex } from './colors.js';
+import { CANVAS_CONSTANTS, CANVAS_COLORS } from './constants.js';
+
 export function render2DCanvas(canvas, zones, settings = {}) {
   if (!canvas) return;
 
@@ -9,26 +12,26 @@ export function render2DCanvas(canvas, zones, settings = {}) {
   if (!ctx) return;
 
   // Clear canvas
-  ctx.fillStyle = '#0F172A';
+  ctx.fillStyle = CANVAS_COLORS.BG_2D;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const { plotWidth = 30, plotDepth = 40, selectedZoneId = null } = settings;
 
   // Calculate scale to fit design in canvas
-  const padding = 40;
+  const padding = CANVAS_CONSTANTS.PADDING;
   const availableWidth = canvas.width - padding * 2;
   const availableHeight = canvas.height - padding * 2;
 
   const scaleX = availableWidth / plotWidth;
   const scaleY = availableHeight / plotDepth;
-  const scale = Math.min(scaleX, scaleY, 10); // Cap scale for readability
+  const scale = Math.min(scaleX, scaleY, CANVAS_CONSTANTS.MAX_SCALE); // Cap scale for readability
 
   const offsetX = padding + (availableWidth - plotWidth * scale) / 2;
   const offsetY = padding + (availableHeight - plotDepth * scale) / 2;
 
   // Draw plot boundary
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = CANVAS_COLORS.PLOT_BORDER;
+  ctx.lineWidth = CANVAS_CONSTANTS.GRID_LINE_WIDTH;
   ctx.strokeRect(
     offsetX,
     offsetY,
@@ -37,9 +40,9 @@ export function render2DCanvas(canvas, zones, settings = {}) {
   );
 
   // Draw grid
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.strokeStyle = CANVAS_COLORS.GRID_2D;
   ctx.lineWidth = 0.5;
-  const gridSize = 5; // 5m grid
+  const gridSize = CANVAS_CONSTANTS.GRID_SIZE; // 5m grid
   for (let i = 0; i <= plotWidth; i += gridSize) {
     const x = offsetX + i * scale;
     ctx.beginPath();
@@ -63,30 +66,19 @@ export function render2DCanvas(canvas, zones, settings = {}) {
     const height = zone.depth * scale;
 
     // Room fill
-    const colors = {
-      living_room: '#3B82F6',
-      kitchen: '#F59E0B',
-      bedroom: '#EC4899',
-      bathroom: '#10B981',
-      staircase: '#8B5CF6',
-      parking: '#4B5563',
-      corridor: '#6B7280',
-      terrace: '#06B6D4',
-      balcony: '#14B8A6',
-    };
-
-    ctx.fillStyle = colors[zone.room_type] || '#6B7280';
-    ctx.globalAlpha = selectedZoneId === zone.id ? 1.0 : 0.6;
+    const colorHex = getColorHex(zone.room_type);
+    ctx.fillStyle = colorHex;
+    ctx.globalAlpha = selectedZoneId === zone.id ? CANVAS_COLORS.SELECTED_ALPHA : CANVAS_COLORS.UNSELECTED_ALPHA;
     ctx.fillRect(x, y, width, height);
 
     // Room border
-    ctx.strokeStyle = selectedZoneId === zone.id ? '#FBBF24' : 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = selectedZoneId === zone.id ? CANVAS_COLORS.SELECTED_BORDER : 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = selectedZoneId === zone.id ? 3 : 1.5;
     ctx.strokeRect(x, y, width, height);
     ctx.globalAlpha = 1.0;
 
     // Room label
-    ctx.fillStyle = '#E5E7EB';
+    ctx.fillStyle = CANVAS_COLORS.TEXT_COLOR;
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

@@ -5,27 +5,8 @@ import { render2DCanvas, getClickedZone } from '../utils/canvas2d';
 import { Canvas3D } from '../utils/canvas3d';
 import { getRoomTypeColor, calculateStats } from '../utils/fallback';
 import { ElementManager } from '../utils/elementManager';
+import { ROOM_TYPES, ROOM_LABELS, TRANSFORM_MODES } from '../utils/constants';
 import '../styles/studio.css';
-
-const ROOM_TYPES = [
-  'living_room','bedroom','kitchen','bathroom',
-  'staircase','parking','balcony','office',
-  'corridor','terrace','generic',
-];
-
-const ROOM_LABELS = {
-  living_room:'Living Room', bedroom:'Bedroom', kitchen:'Kitchen',
-  bathroom:'Bathroom', staircase:'Staircase', parking:'Parking',
-  balcony:'Balcony', office:'Office', corridor:'Corridor',
-  terrace:'Terrace', generic:'Generic Room',
-};
-
-const TRANSFORM_MODES = [
-  { id:'select',    icon:'↖', label:'Select'  },
-  { id:'translate', icon:'✛', label:'Move'    },
-  { id:'rotate',    icon:'↻', label:'Rotate'  },
-  { id:'scale',     icon:'⤢', label:'Scale'   },
-];
 
 export default function Studio() {
   const navigate = useNavigate();

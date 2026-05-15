@@ -9,10 +9,10 @@
 }
 
 :root {
-  --color-bg-primary: #0b1020;
-  --color-bg-surface: #111827;
-  --color-bg-panel: #151b2e;
-  --color-canvas: #0f172a;
+  --color-bg-primary: #181818;
+  --color-bg-surface: #1f1f1f;
+  --color-bg-panel: #242424;
+  --color-canvas: #151515;
   
   --color-text-primary: #e5e7eb;
   --color-text-muted: #94a3b8;
