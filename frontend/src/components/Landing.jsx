@@ -66,8 +66,6 @@ export default function Landing() {
       // Navigate to studio
       navigate('/studio');
     } catch (err) {
-      console.error('Design generation failed:', err);
-
       // Fall back to demo layout
       const fallback = generateFallbackLayout({
         plotWidth:    parseFloat(settings.plotWidth),

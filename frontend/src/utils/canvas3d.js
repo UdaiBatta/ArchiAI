@@ -68,7 +68,7 @@ export class Canvas3D {
      INIT
   ══════════════════════════════════════════════════════ */
   _init() {
-    if (!this.container) { console.error('[Canvas3D] No container'); return; }
+    if (!this.container) return;
 
     const W = this.container.clientWidth  || 800;
     const H = this.container.clientHeight || 600;
@@ -150,7 +150,6 @@ export class Canvas3D {
     this._resizeObs.observe(this.container);
 
     this._animate();
-    console.log('[Canvas3D] Initialized — OrbitControls + TransformControls ready');
   }
 
   /* ══════════════════════════════════════════════════════
@@ -217,7 +216,6 @@ export class Canvas3D {
     if (!this.zones.length) return;
     this.zones.forEach((z) => this._buildMesh(z));
     this.fitCamera();
-    console.log(`[Canvas3D] Rendered ${this.zones.length} zones`);
   }
 
   /** Incremental add */

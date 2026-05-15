@@ -1,7 +1,6 @@
 /**
  * Canvas3DView - Wrapper for 3D canvas rendering
  */
-import React from 'react';
 import { TRANSFORM_MODES } from '../../utils/constants';
 
 export default function Canvas3DView({ canvas3DRef, transformMode, snapToGrid }) {

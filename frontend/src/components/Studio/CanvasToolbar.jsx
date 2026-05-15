@@ -1,7 +1,6 @@
 /**
  * CanvasToolbar - Toolbar with view modes, transform tools, and canvas actions
  */
-import React from 'react';
 import { TRANSFORM_MODES } from '../../utils/constants';
 
 export default function CanvasToolbar({

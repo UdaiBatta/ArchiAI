@@ -1,7 +1,6 @@
 /**
  * CanvasCaption - Status bar showing selected zone information
  */
-import React from 'react';
 
 export default function CanvasCaption({ selectedZone }) {
   if (!selectedZone) return null;

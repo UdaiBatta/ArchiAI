@@ -1,7 +1,6 @@
 /**
  * LeftSidebar - Design brief, add element menu, and design actions
  */
-import React from 'react';
 import { ROOM_TYPES, ROOM_LABELS } from '../../utils/constants';
 
 export default function LeftSidebar({
@@ -77,7 +76,7 @@ export default function LeftSidebar({
             <button className="btn btn-secondary full-width">
               ✨ Regenerate
             </button>
-            <button className="btn btn-secondary full-width" style={{ marginTop: 6 }}>
+            <button className="btn btn-secondary full-width design-actions-btn">
               ✓ Check Compliance
             </button>
           </section>

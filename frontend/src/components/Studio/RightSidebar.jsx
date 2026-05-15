@@ -1,9 +1,8 @@
 /**
  * RightSidebar - Layers list, inspector panel, and statistics
  */
-import React from 'react';
 import { ROOM_TYPES, ROOM_LABELS } from '../../utils/constants';
-import { getRoomTypeColor } from '../../utils/fallback';
+import { getColorHex } from '../../utils/colors';
 
 export default function RightSidebar({
   rightOpen,
@@ -38,7 +37,7 @@ export default function RightSidebar({
                 >
                   <div
                     className="layer-color"
-                    style={{ backgroundColor: getRoomTypeColor(zone.room_type) }}
+                    style={{ backgroundColor: getColorHex(zone.room_type) }}
                   />
                   <span className="layer-label">{zone.label}</span>
                   <span className="layer-floor">F{zone.floor}</span>

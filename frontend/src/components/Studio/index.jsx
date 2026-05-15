@@ -2,12 +2,13 @@
  * Studio - Main orchestrator component
  * Handles state management and coordinates all sub-components
  */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { render2DCanvas, getClickedZone } from '../../utils/canvas2d';
 import { Canvas3D } from '../../utils/canvas3d';
-import { getRoomTypeColor, calculateStats } from '../../utils/fallback';
+import { calculateStats } from '../../utils/fallback';
+import { getColorHex } from '../../utils/colors';
 import { ElementManager } from '../../utils/elementManager';
 import { ROOM_TYPES } from '../../utils/constants';
 import '../../styles/studio.css';
@@ -32,6 +33,7 @@ export default function Studio() {
   const [rightOpen, setRightOpen] = useState(true);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [editingField, setEditingField] = useState(null);
+  const [exportStatus, setExportStatus] = useState(null); // { type: 'success'|'error', message: '...' }
 
   // Design data state
   const [design, setDesign] = useState(null);
@@ -250,18 +252,22 @@ export default function Studio() {
   const handleExportPDF = async () => {
     try {
       await apiService.generateReport({ sessionId: design?.session_id, layoutData: { zones } });
-      alert('PDF generated!');
+      setExportStatus({ type: 'success', message: 'PDF generated successfully!' });
+      setTimeout(() => setExportStatus(null), 3000);
     } catch (e) {
-      alert('PDF failed: ' + e.message);
+      setExportStatus({ type: 'error', message: `PDF export failed: ${e.message}` });
+      setTimeout(() => setExportStatus(null), 5000);
     }
   };
 
   const handleExportDXF = async () => {
     try {
       await apiService.generateDXF({ sessionId: design?.session_id, layoutData: { zones } });
-      alert('DXF generated!');
+      setExportStatus({ type: 'success', message: 'DXF generated successfully!' });
+      setTimeout(() => setExportStatus(null), 3000);
     } catch (e) {
-      alert('DXF failed: ' + e.message);
+      setExportStatus({ type: 'error', message: `DXF export failed: ${e.message}` });
+      setTimeout(() => setExportStatus(null), 5000);
     }
   };
 
@@ -384,6 +390,12 @@ export default function Studio() {
           handleDeleteElement={handleDeleteElement}
         />
       </div>
+
+      {exportStatus && (
+        <div className={`export-notification export-notification-${exportStatus.type}`}>
+          {exportStatus.message}
+        </div>
+      )}
     </div>
   );
 }

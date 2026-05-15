@@ -1,7 +1,6 @@
 /**
  * Canvas2DView - Wrapper for 2D canvas rendering
  */
-import React from 'react';
 
 export default function Canvas2DView({ canvas2DRef, handleCanvas2DClick }) {
   return (

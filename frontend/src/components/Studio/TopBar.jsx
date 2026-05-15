@@ -1,7 +1,7 @@
 /**
  * TopBar - Header with title, home button, and export menu
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function TopBar({
@@ -31,7 +31,7 @@ export default function TopBar({
           💾 Save
         </button>
         <div className="menu-divider" />
-        <div style={{ position: 'relative' }}>
+        <div className="menu-wrapper">
           <button
             className="btn btn-secondary"
             onClick={() => setShowExportMenu(!showExportMenu)}
@@ -39,7 +39,7 @@ export default function TopBar({
             ⬇ Export
           </button>
           {showExportMenu && (
-            <div className="export-menu" style={{ display: 'flex' }}>
+            <div className="export-menu">
               <button onClick={handleExportPDF}>📄 PDF Report</button>
               <button onClick={handleExportDXF}>🏗 DXF File</button>
               <button onClick={handleExportJSON}>{ } JSON</button>

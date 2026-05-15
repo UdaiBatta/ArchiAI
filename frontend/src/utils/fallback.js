@@ -157,23 +157,6 @@ export function calculateStats(zones) {
   };
 }
 
-/* ─── Room colour map ───────────────────────────────── */
-export function getRoomTypeColor(roomType) {
-  const colors = {
-    living_room: '#3B82F6',
-    kitchen: '#F59E0B',
-    bedroom: '#EC4899',
-    bathroom: '#10B981',
-    staircase: '#8B5CF6',
-    parking: '#6B7280',
-    corridor: '#9CA3AF',
-    terrace: '#06B6D4',
-    balcony: '#14B8A6',
-    office: '#6366F1',
-    generic: '#9CA3AF',
-  };
-  return colors[roomType] || '#6B7280';
-}
 
 export function calculateBoundingBox(zones) {
   if (!zones || !zones.length) return { minX: 0, minY: 0, maxX: 30, maxY: 40 };
