@@ -121,61 +121,11 @@ export class ElementManager {
     });
   }
 
-  static moveElement(zones, id, dx, dy, dz = 0) {
-    return zones.map((z) =>
-      z.id === id ? { ...z, x: z.x + dx, y: z.y + dy, z: (z.z || 0) + dz } : z
-    );
-  }
-
-  static resizeElement(zones, id, width, depth, height = null) {
-    return zones.map((z) => {
-      if (z.id !== id) return z;
-      const w = Math.max(0.5, width);
-      const d = Math.max(0.5, depth);
-      return {
-        ...z,
-        width: w, depth: d,
-        ...(height !== null && { height: Math.max(0.5, height) }),
-        area: +(w * d).toFixed(2),
-      };
-    });
-  }
-
-  static rotateElement(zones, id, angle) {
-    return zones.map((z) =>
-      z.id === id ? { ...z, rotation: ((z.rotation || 0) + angle) % 360 } : z
-    );
-  }
-
-  static findElement(zones, id) {
-    return zones.find((z) => z.id === id);
-  }
-
   static getElementsOnFloor(zones, floor) {
     return zones.filter((z) => z.floor === floor);
   }
 
   static validateElement(el) {
     return el && el.id && el.room_type && el.width > 0 && el.depth > 0 && el.height > 0;
-  }
-
-  static calculateBounds(zones) {
-    if (!zones.length) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    zones.forEach((z) => {
-      minX = Math.min(minX, z.x);
-      maxX = Math.max(maxX, z.x + z.width);
-      minY = Math.min(minY, z.y);
-      maxY = Math.max(maxY, z.y + z.depth);
-    });
-    return { minX, maxX, minY, maxY };
-  }
-
-  static centerLayout(zones) {
-    if (!zones.length) return zones;
-    const b   = ElementManager.calculateBounds(zones);
-    const cx  = (b.minX + b.maxX) / 2;
-    const cy  = (b.minY + b.maxY) / 2;
-    return zones.map((z) => ({ ...z, x: +(z.x - cx).toFixed(3), y: +(z.y - cy).toFixed(3) }));
   }
 }

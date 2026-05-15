@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../api';
+import { apiService } from '../../services/api';
 import { render2DCanvas, getClickedZone } from '../../utils/canvas2d';
 import { Canvas3D } from '../../utils/canvas3d';
 import { getRoomTypeColor, calculateStats } from '../../utils/fallback';

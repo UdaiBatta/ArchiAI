@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../api';
+import { apiService } from '../services/api';
 import { generateFallbackLayout } from '../utils/fallback';
 import '../styles/landing.css';
 
