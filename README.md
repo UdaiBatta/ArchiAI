@@ -1,51 +1,92 @@
-# Archi3D Backend
+﻿# Archi3D — AI-Powered Architectural Design Platform
 
-Backend-first Django + DRF service for deterministic bylaw-compliant architectural planning, explainable layout generation, and Hypar bridge exports.
+A full-stack platform for **deterministic bylaw-compliant architectural planning**, **AI-driven layout generation**, **real-time collaboration**, and **professional exports**. Features a modern browser-based UI for designing, visualizing, and exporting architectural layouts with intelligent compliance checking.
 
-## Run locally (Windows, fastest path)
+## 🎯 What's New (May 2026)
 
-1. Open **PowerShell** and go to this folder (quotes matter if the path has spaces):
+### ✨ Professional Design Studio
+- **Browser-based design interface** with ChatGPT-style prompt input
+- **Real-time 3D visualization** of generated layouts using CSS 3D transforms
+- **Live project management** — create, save, load, and delete designs
+- **Interactive layers panel** with visibility toggles, selection, and object inspector
+- **Professional export workflow** — PDF reports, DXF for CAD, JSON, screenshots, and project downloads
+- **Compliance dashboard** — instant bylaw validation with pass/fail/warning indicators
+- **Responsive dark theme** with glass-morphism UI and smooth animations
 
-   ```powershell
+### 🔌 Real-Time Collaboration
+- **WebSocket support** with JWT authentication for instant design updates
+- **Progress broadcasting** — watch designs generate in real-time
+- **Revisions tracking** — all design iterations are saved
+- **Comments system** — add feedback and notes to projects
+- **Share links** — collaborate with team members without account registration
+
+### 📊 Enhanced Exports
+- **PDF reports** with geometry, compliance, and statistics using ReportLab
+- **DXF exports** for CAD integration (AutoCAD, Revit compatibility)
+- **JSON outputs** — structured data for integrations and archival
+- **Background job tracking** — async processing with retry logic and timeouts
+
+---
+
+## 🚀 Quick Start (Windows)
+
+### Backend Setup
+
+1. Open **PowerShell** and navigate to the backend folder:
+
+   \\\powershell
    cd "D:\My projects\Archi3D\backend"
-   ```
+   \\\
 
-2. Install dependencies (uses the locked `uv.lock`):
+2. Install dependencies:
 
-   ```powershell
+   \\\powershell
    uv sync
-   ```
+   \\\
 
-3. Apply the database migrations:
+3. Apply database migrations:
 
-   ```powershell
+   \\\powershell
    uv run python manage.py migrate
-   ```
+   \\\
 
-4. Start the dev server (bind explicitly so the URL is predictable):
+4. Start the development server:
 
-   ```powershell
+   \\\powershell
    uv run python manage.py runserver 127.0.0.1:8000
-   ```
+   \\\
 
-5. In your browser open:
+5. Open your browser:
 
-   - **http://127.0.0.1:8000/** — simple page where you can type requirements and click **Run design pipeline** (this calls `POST /api/v1/design/`).
-   - **http://127.0.0.1:8000/api/v1/health/** — JSON status check (database, bylaws, Ollama, RAG).
+   - **http://127.0.0.1:8000/api/v1/health/studio/** — Archi3D Design Studio (full UI)
+   - **http://127.0.0.1:8000/api/v1/health/** — API health check (database, knowledge, services)
 
-If the root URL used to show **404**, that was expected before: there was no home page. Now `/` serves the local test page.
+### Frontend Setup (Optional - for custom UI development)
 
-**Common issues**
+\\\ash
+cd "D:\My projects\Archi3D\frontend"
 
-- **`python` is not recognized**: use `uv run python ...` from this folder after `uv sync`, or activate `.venv` and run `python manage.py ...`.
-- **Wrong folder**: run commands from the directory that contains `manage.py` (the `backend` folder), not a parent folder.
-- **Port in use**: try `uv run python manage.py runserver 127.0.0.1:8001` and open that port instead.
-- **PowerShell and `&&`**: older PowerShell does not support `&&`; run commands **one per line**, or use `;` between commands.
+# Install dependencies
+npm install
 
-**Test the API without the browser (PowerShell)**
+# Start development server
+npm run dev
 
-```powershell
-$body = @{
+# Build for production
+npm run build
+\\\
+
+### Troubleshooting
+
+- **\python\ not found**: Use \uv run python ...\ after \uv sync\ or activate the virtual environment
+- **Wrong directory**: Ensure you're in the folder containing \manage.py\ (the \ackend\ folder)
+- **Port already in use**: Try \uv run python manage.py runserver 127.0.0.1:8001\
+- **PowerShell compatibility**: Use \;\ to chain commands instead of \&&\
+
+### Quick API Test (PowerShell)
+
+\\\powershell
+\ = @{
   raw_text = "Design a 2-floor residential house in Mumbai on a 30x40m plot with parking."
   region = "india_mumbai"
   building_type = "residential"
@@ -56,225 +97,368 @@ $body = @{
   plot_facing_direction = "north"
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/design/" -Method Post -ContentType "application/json; charset=utf-8" -Body $body
-```
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/design/" -Method Post -ContentType "application/json" -Body \
+\\\
 
-There is still **no file-upload UI** for PDFs in this repo; knowledge files are ingested via scripts or the ingestion job API. The design pipeline accepts **JSON** (and natural language in `raw_text`).
+---
 
-### Hypar: Elements API vs spreadsheet vs this backend
+## 📚 Setup & Testing
 
-- **[Hypar Elements API (namespace Elements)](https://hypar-io.github.io/Elements/api/Elements.html)** documents the **Elements** model library (e.g. `Space`, `Wall`, `Floor`, `Model`) used in Hypar’s geometry stack. It is **not** the same as logging into hypar.io and using **Upload spreadsheet**; it is the reference for **types and concepts** when you build importers, plugins, or Hypar Functions in .NET/C#.
-- **Spreadsheet / CSV**: our bridge still produces a **CSV** for the product’s manual upload flow; that remains the simplest path without a product API token.
-- **JSON outputs from Archi3D**:
-  - `hypar_<seed>.json` — internal concept schema `archi3d-hypar-concept/v1`.
-  - `hypar_elements_ref_<seed>.json` — **Elements-oriented hints** (same `outputs/` folder when layout export runs): maps each zone to a documented `Space`-style record and points at the Elements docs URL above. Use it as a bridge for a custom Elements-based tool; it is **not** a full serialized Elements `Model`.
+### Development Commands
 
-The API response includes **`hypar_elements_reference_path`** (filename) when that file is written.
+\\\ash
+# Install dependencies with lockfile
+uv sync
 
-## Setup
+# Run database migrations
+uv run python manage.py migrate
 
-- Install deps with lockfile:
-  - `uv sync`
-- Apply migrations:
-  - `uv run python manage.py migrate`
-- Run server:
-  - `uv run python manage.py runserver 127.0.0.1:8000`
-- Run tests:
-  - `uv run pytest -q`
+# Start development server
+uv run python manage.py runserver 127.0.0.1:8000
 
-## Core API Workflow
+# Run all tests
+uv run pytest -q
+\\\
 
-- Generate direct design session:
-  - `POST /api/v1/design/`
-- Auto-create project in Hypar (direct submit):
-  - `POST /api/v1/design/hypar/auto-create/`
-- Trigger synchronous Hypar bridge export (legacy):
-  - `POST /api/v1/design/hypar/bridge/`
-- Trigger background Hypar bridge export job:
-  - `POST /api/v1/design/hypar/bridge/jobs/`
-- Trigger background ingestion job:
-  - `POST /api/v1/design/ingestion/jobs/`
-- Check single job:
-  - `GET /api/v1/design/jobs/<job_id>/`
-- List recent jobs:
-  - `GET /api/v1/design/jobs/?limit=20`
+### Test Specific Features
 
-## API-First: Requirements-Only + Optional Hypar Auto-Submit
+\\\ash
+# User authentication
+uv run pytest tests/test_accounts.py -q
 
-You can call `POST /api/v1/design/` from your own frontend/backend with only `raw_text`.
-If `raw_text` includes plot dimensions (for example, `30x40`), the parser uses them directly and does not force a separate `plot_width_m` / `plot_depth_m` entry.
+# Project management (CRUD, collaborators, revisions)
+uv run pytest tests/test_projects.py -q
 
-Optional request placeholders for direct Hypar automation:
+# Real-time WebSocket updates
+uv run pytest tests/test_consumers.py -q
 
-- `hypar_api_url`
-- `hypar_api_token`
-- `hypar_project_name`
+# PDF/DXF exports and reports
+uv run pytest tests/test_reports.py -q
+\\\
 
-Example request body:
+---
 
-```json
-{
-  "raw_text": "Design a 2-floor residential house in Mumbai on a 30x40 metre plot with parking.",
-  "hypar_api_url": "https://your-hypar-endpoint",
-  "hypar_api_token": "<your-token>",
-  "hypar_project_name": "Archi3D Demo Project"
-}
-```
+## 🎨 Browser-Based UI Features
 
-Response includes `hypar_submission` to indicate direct submission outcome.
-Credentials are consumed at runtime and removed from persisted `parsed_input`.
+### Design Studio (\/api/v1/health/studio/\)
 
-For direct submit behavior, prefer:
+The modern design studio includes:
 
-- `POST /api/v1/design/hypar/auto-create/`
+- **Prompt input bar** — Enter design requirements in natural language with smart suggestions
+- **Design generation** — Generate, improve, and regenerate layouts with one click
+- **3D visualization** — Interactive zone visualization with selection, panning, and rotation
+- **Layers panel** — Manage visibility, lock states, and object properties
+- **Inspector panel** — View and edit room dimensions, area, and metadata
+- **Compliance panel** — See all bylaw validation results at a glance
+- **Export modal** — Choose format (PDF, DXF, JSON, screenshot) and download
+- **Settings modal** — Configure project name, description, region, and preferences
+- **Load modal** — Browse and open previously saved designs
+- **Toast notifications** — Instant feedback on all operations
+- **Toolbar** — Floor selector, view controls (2D/3D/Top/Frame/Grid), and reset
 
-This endpoint returns:
+### Key UI Components
 
-- `status=created_in_hypar` when project creation succeeds
-- `status=hypar_submission_failed` when credentials/endpoint are missing or submission fails
+- **Top bar** — Project info and status indicator
+- **Left panel** — Prompt input and design settings (collapsible)
+- **Center canvas** — 3D room visualization
+- **Right panel** — Layers, inspector, and statistics (collapsible)
+- **Bottom toolbar** — Quick access to tools (Select, Move, Rotate, Scale, Delete, Duplicate)
+- **Modals** — Export, settings, compliance, load project dialogs
 
-## Production-Safe Defaults Added
+---
 
-- Bridge and ingestion operations have persistent `OperationJob` tracking.
-- Bridge jobs capture status lifecycle (`queued`, `running`, `retrying`, `clarification_required`, `succeeded`, `failed`, `timed_out`).
-- Bridge jobs support configurable retries and timeout tracking.
-- Ingestion now enforces strict PDF limits:
-  - max pages per PDF
-  - max extracted characters per PDF
-- Clarification gate remains enforced before heavy generation.
+## 🔌 API Reference
 
-## Example: Background Bridge Job
+### Design Generation
+
+Generate a new architectural layout from text requirements:
+
+\\\ash
+POST /api/v1/design/
 
 Request:
-
-```json
 {
-  "raw_text": "Design a 2-floor residential house in Mumbai",
+  "raw_text": "Design a 2-floor residential house in Mumbai on a 30x40m plot",
   "region": "india_mumbai",
   "building_type": "residential",
   "plot_width_m": 30,
   "plot_depth_m": 40,
   "num_floors": 2,
   "num_units": 1,
-  "plot_facing_direction": "north",
-  "max_retries": 2,
-  "timeout_seconds": 120
+  "plot_facing_direction": "north"
 }
-```
 
-Polling:
+Response:
+{
+  "session_id": "uuid",
+  "parsed_input": { ... },
+  "design_output": {
+    "zones": [ ... ],
+    "connections": [ ... ],
+    "compliance_result": { ... }
+  },
+  "pdf_path": "outputs/report_<seed>.pdf",
+  "dxf_path": "outputs/design_<seed>.dxf",
+  "json_path": "outputs/hypar_<seed>.json"
+}
+\\\
 
-- `GET /api/v1/design/jobs/<job_id>/`
-- Inspect `status`, `failure_reason`, `result_payload`, `artifact_path`.
+### Project Management
 
-## Ingestion Operational Notes
+\\\
+GET/POST /api/v1/projects/                    # List and create projects
+GET/PUT/DELETE /api/v1/projects/<id>/         # Retrieve, update, delete
+POST /api/v1/projects/<id>/collaborators/     # Add team members
+GET /api/v1/projects/<id>/revisions/          # Access version history
+POST /api/v1/projects/<id>/comments/          # Add comments
+GET /api/v1/projects/<id>/share-link/         # Generate shareable links
+\\\
 
-- Default source dir: `knowledge/source_docs`
-- Default output file: `knowledge/raw/ingested_documents.json`
-- Override limits from ingestion job payload:
-  - `max_pdf_pages`
-  - `max_pdf_chars`
-  - `max_section_chars`
+### Background Jobs
 
-## Web Scraping Prototype (Design Knowledge)
+\\\
+POST /api/v1/design/hypar/bridge/jobs/        # Submit async export job
+GET /api/v1/design/jobs/<job_id>/             # Check job status
+GET /api/v1/design/jobs/?limit=20             # List recent jobs
+\\\
 
-Use the safety-first scraper to collect architecture pages into retriever-ready chunks.
+### Knowledge Ingestion
 
-- Prototype source config:
-  - `knowledge/source_configs/sources.prototype.json`
-- Run scraper:
-  - `uv run python scripts/scrape_knowledge_sources.py --config knowledge/source_configs/sources.prototype.json --crawl-output-dir outputs/scraped --payload-output knowledge/raw/scraped_sources.json --region-id all --building-type all --priority 0.85 --timeout-seconds 12`
-- What it writes:
-  - raw crawled pages + manifests under `outputs/scraped/<source>/`
-  - chunk payload at `knowledge/raw/scraped_sources.json`
-
-Notes:
-- Scraper enforces domain allowlist and robots checks.
-- For prototype speed, this config does not enforce license filtering; tighten this before production.
-
----
-
-## Roadmap — What's Pending
-
-The following items are the next planned implementation steps, in priority order. Dataset model training is intentionally deferred until all pre-dataset backend tasks are done.
-
-### Pre-Dataset Backend Tasks
-
-1. **Region and building-type scoped knowledge metadata expansion**
-   - Add per-region and per-building-type metadata files so the vectorless retriever returns more targeted bylaw and design knowledge.
-
-2. **Layout feasibility checks**
-   - Corridor width constraints
-   - Stair core continuity checks across floors
-   - Service shaft continuity checks
-
-3. **Structured explainability object (versioned JSON)**
-   - Replace free-text explanation with a versioned, machine-readable JSON schema in the API response so frontends can render it properly.
-
-4. **Hypar API integration test harness**
-   - Add mocked endpoint tests that exercise the full Hypar submission flow without a live Hypar account, to keep CI reliable.
-
-5. **Ingestion and scraper quality gates**
-   - Duplicate detection across ingested documents
-   - Source trust scoring
-   - Stricter citation normalisation before knowledge chunks are indexed
-
-### Deferred (Post-Dataset)
-
-- LLM fine-tuning / model training on collected architectural dataset
-- Larger bylaw corpus ingestion for more regions
+\\\
+POST /api/v1/design/ingestion/jobs/           # Ingest knowledge documents
+GET /api/v1/design/jobs/<job_id>/             # Check ingestion status
+\\\
 
 ---
 
-## Platform / Website Plans
+## 🏗️ Project Architecture
 
-**Hypar.io API availability** — Hypar currently requires per-account API tokens and its API is not freely accessible to all users. We have two parallel tracks:
-
-- **Track A — Hypar bridge (current):** When a Hypar API token is available, the bridge submits designs directly to Hypar via `POST /api/v1/design/hypar/auto-create/` or the background job endpoint. The CSV upload flow remains the simplest path without an API token.
-
-- **Track B — ArchiAI standalone platform:** If Hypar's API remains gated or unavailable for general use, we plan to build a **dedicated ArchiAI web platform** that hosts the full design-generation workflow directly. This would include:
-  - A browser-based UI for entering project requirements
-  - Real-time design generation and bylaw compliance feedback
-  - Built-in 3D/2D layout visualisation (no Hypar dependency)
-  - PDF report export and shareable project links
-  - User accounts, project history, and collaboration features
-
-Track B development will begin once the pre-dataset backend tasks above are complete and Hypar API access is evaluated. Both tracks share the same Django + DRF backend; only the frontend and submission layer differ.
+\\\
+archi3d/
+├── backend/
+│   ├── apps/
+│   │   ├── accounts/          # User authentication
+│   │   ├── design/            # Design generation & job tracking
+│   │   ├── projects/          # Project management & collaboration
+│   │   ├── reports/           # PDF/DXF generation
+│   │   └── health/            # Health checks & studio UI
+│   ├── archi3d/
+│   │   ├── settings/          # Django settings (base/dev/prod)
+│   │   ├── urls.py            # URL routing
+│   │   ├── asgi.py            # Daphne ASGI server
+│   │   ├── routing.py         # WebSocket routing
+│   │   └── celery.py          # Async task queue
+│   ├── bylaws/                # Regional bylaw data (YAML)
+│   ├── knowledge/             # RAG corpus and ingested documents
+│   ├── outputs/               # Generated designs and exports
+│   ├── scripts/               # Utility scripts
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/        # React/Vue components
+│   │   ├── pages/             # Page layouts
+│   │   ├── styles/            # CSS/SCSS
+│   │   └── api.js             # API integration
+│   ├── public/                # Static assets
+│   ├── package.json
+│   └── vite.config.js
+│
+├── README.md
+├── DEVELOPER_GUIDE.md
+├── FRONTEND_SETUP_GUIDE.md
+└── LICENSE
+\\\
 
 ---
 
-## How We Plan to Build and Improve the Design Intelligence
+## 🔐 Technology Stack
 
-### 1 — Hypar Elements API for Geometry and Structures
+**Backend:**
+- Django 4.2 + Django REST Framework (DRF)
+- Daphne ASGI server for WebSocket support
+- Django Channels for real-time communication
+- Redis for caching and job queue
+- Celery for async task processing
+- JWT authentication with secure token storage
 
-We intend to use the [Hypar Elements API](https://hypar-io.github.io/Elements/api/Elements.html) as the primary geometry layer for defining architectural structures. Elements provides a rich type system (`Space`, `Wall`, `Floor`, `Column`, `Beam`, `Roof`, etc.) that lets us express every room, structural member, and building component in a well-typed, version-controlled model rather than ad-hoc JSON blobs.
+**Frontend:**
+- Modern browser-based UI (HTML/CSS/JavaScript)
+- CSS 3D transforms for interactive visualization
+- Fetch API for REST communication
+- WebSocket for real-time updates
+- Glass-morphism and modern CSS design
 
-Planned use:
-- Map each zone produced by the layout generator to a typed `Space` record with dimensions, level, and adjacency metadata.
-- Express walls, slabs, and structural grids as first-class Elements objects so they can be visualised, validated, and exported consistently.
-- Produce a serialized Elements `Model` (not just the hints file currently written) that can be loaded into any Elements-compatible viewer or downstream tool.
-- Use Elements as the single source of truth for geometry whether we submit to Hypar or render inside the ArchiAI platform (Track B above).
+**Data & Export:**
+- ReportLab for PDF generation with custom styling
+- ezdxf for DXF export with CAD compatibility
+- SQLite (development) / PostgreSQL (production)
+- JSON for inter-system communication
 
-### 2 — Architecture Books and Curated Knowledge as the Training Corpus
+**Knowledge & Intelligence:**
+- Vectorless retriever with region/building-type scoping
+- Ollama integration for local LLM inference
+- RAG (Retrieval-Augmented Generation) for design explanations
+- Regional bylaw engine with compliance checking
 
-Good design outputs depend on good design knowledge. We plan to build a structured knowledge pipeline that feeds the retriever and (eventually) model fine-tuning:
+---
 
-**Architecture reference books and standards**
-- Ingest digitised architecture handbooks (e.g. Neufert, Time-Saver Standards, NBC/BIS codes) as chunked PDF documents via the existing `knowledge_ingestion.py` pipeline.
-- Each chunk is tagged with region, building type, topic (circulation, accessibility, structural, MEP, fire safety, etc.) so the vectorless retriever can return precisely scoped results.
-- Bylaw PDFs for additional Indian and international regions will be added incrementally as structured bylaw YAML files consumed by `bylaw_loader.py`.
+## ✨ Core Capabilities
 
-**Web scraper for live architectural knowledge**
-- The existing `safe_web_scraper.py` prototype (domain allowlist + robots.txt checks) will be extended to crawl trusted architecture knowledge sources (planning portals, open-access journals, municipal bylaw sites).
-- Each scraped page is chunked, deduplicated, and trust-scored before it enters `knowledge/raw/`.
-- License filtering will be tightened before any production crawl so only permissively licensed content is retained.
-- The combined scraped + ingested corpus forms the retrieval index that drives bylaw-aware, knowledge-grounded design explanations.
+### Layout Generation
+- AI-driven zone creation based on natural language requirements
+- Automatic compliance checking against regional bylaws
+- Structural feasibility validation
+- Optimization for circulation and accessibility
 
-### 3 — Manual Review and Iterative Design Improvement
+### Multi-Format Exports
+- **PDF**: Professional reports with geometry, statistics, and compliance data
+- **DXF**: CAD-compatible format for integration with design tools
+- **JSON**: Structured data for programmatic access and integrations
+- **Screenshots**: High-quality visualization captures
 
-Automated generation is the starting point, not the final answer. We plan structured human-in-the-loop workflows:
+### Collaboration
+- Real-time updates across multiple users
+- Project sharing with role-based access
+- Design revision history with rollback
+- Comment threads on design elements
 
-- **Manual knowledge curation:** Architects and domain experts can review, annotate, and override knowledge chunks in `knowledge/raw/` to correct errors or add nuance that scrapers miss.
-- **Design review layer:** Generated layouts and geometry outputs will be reviewable through the platform UI. Reviewers can flag zones, adjust dimensions, or override bylaw interpretations, and those decisions are stored as corrections that inform future generation.
-- **Feedback loop into retrieval:** Approved corrections are tagged and re-indexed so the retriever surfaces them in similar future requests, making the system progressively more accurate without requiring a full model retrain.
-- **Continuous bylaw updates:** As municipal codes change, bylaw YAML files can be updated manually and the compliance engine picks up the changes on the next server start — no model retraining needed for legal rule changes.
+### Compliance Intelligence
+- Automated bylaw validation against regional standards
+- Detailed pass/fail/warning indicators
+- Compliance report generation
+- Support for multiple regions (India - Delhi, Mumbai, NCR; US - NYC; International)
+
+---
+
+## 🗺️ Completed Features ✅
+
+- ✅ Professional browser-based design studio with full UI
+- ✅ Django backend with project management system
+- ✅ WebSocket support for real-time collaboration
+- ✅ PDF and DXF export capabilities
+- ✅ Background job tracking with retry logic
+- ✅ User authentication and account management
+- ✅ Multi-region bylaw compliance engine
+- ✅ Knowledge ingestion pipeline
+- ✅ Production-ready database setup
+
+---
+
+## 🚀 Roadmap — Future Enhancements
+
+### Immediate Priority (Q2 2026)
+
+1. **Enhanced Compliance Engine**
+   - Corridor width validation and routing
+   - Stair core continuity across floors
+   - Service shaft and MEP routing verification
+   - Fire safety and egress calculations
+   - FSI (Floor Space Index) optimization
+
+2. **Knowledge Expansion**
+   - Additional Indian regions (Bangalore, Hyderabad, Pune, Chennai)
+   - International bylaw support (UK, EU, APAC regions)
+   - Architecture reference books (Neufert, Time-Saver Standards, NBC codes)
+   - Building type-specific knowledge bases
+
+3. **UI/UX Improvements**
+   - Full 3D rendering with Three.js for better visualization
+   - Section cuts and elevation views
+   - Material and lighting preview
+   - Undo/redo functionality with history panel
+   - Keyboard shortcuts for power users
+
+4. **Advanced Design Tools**
+   - Manual zone adjustment and repositioning
+   - Dimension fine-tuning
+   - Custom zone types and properties
+   - Design templates for quick starts
+
+### Medium-term (Q3-Q4 2026)
+
+5. **Real-time Collaboration Enhancements**
+   - Multi-user simultaneous editing
+   - Design versioning and branching
+   - Role-based permissions (viewer, editor, owner)
+   - Audit logs and change tracking
+   - Conflict resolution for concurrent edits
+
+6. **Advanced Visualization**
+   - Full 3D model rendering with textures
+   - Augmented Reality (AR) preview on mobile
+   - Virtual Reality (VR) walkthrough support
+   - Photorealistic rendering options
+
+7. **Integration & API**
+   - Hypar Elements API integration for geometry export
+   - Direct Revit plugin for BIM integration
+   - SketchUp plugin for design browsing
+   - BIM360 and Construction Cloud integration
+   - Third-party CAD tool plugins
+
+8. **Data & Analytics**
+   - Design performance metrics dashboard
+   - Project analytics and statistics
+   - Usage patterns and design trends
+   - Client reporting and portfolio management
+
+### Long-term (2027+)
+
+9. **SaaS Platform**
+   - Subscription tiers (free, professional, enterprise)
+   - Multi-team management and organization support
+   - Enterprise SSO and access controls
+   - Usage analytics and billing dashboard
+   - API marketplace for third-party integrations
+
+10. **AI Model Improvements**
+    - Custom model fine-tuning on architectural dataset
+    - Region-specific design model variants
+    - Machine learning-based design optimization
+    - Automated design quality scoring
+    - A/B testing framework for algorithm improvements
+
+11. **Mobile Experience**
+    - Native iOS/Android mobile apps
+    - Offline-first architecture with local caching
+    - Mobile-optimized design review interface
+    - AR visualization on mobile devices
+    - Quick project sharing and preview
+
+12. **Advanced Features**
+    - Parametric design support
+    - Design pattern libraries and templates
+    - Collaborative mood boards and inspiration
+    - Cost estimation integration
+    - Sustainability and green building scoring
+
+---
+
+## 📖 Documentation
+
+- [Frontend Setup Guide](FRONTEND_SETUP_GUIDE.md) — Browser UI development, build, and deployment
+- [Developer Guide](DEVELOPER_GUIDE.md) — Architecture, coding standards, and contribution guidelines
+- [Backend Roadmap](backend/IMPLEMENTATION_ROADMAP.md) — Detailed implementation plan
+- [Collaboration Handoff](backend/COLLABORATION_HANDOFF.md) — Team workflow and git practices
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please refer to [Developer Guide](DEVELOPER_GUIDE.md) for:
+- Code style and best practices
+- Testing requirements and coverage
+- Pull request workflow
+- Setting up development environment
+- Architecture and design patterns
+
+---
+
+## 📄 License
+
+See [LICENSE](backend/LICENSE) file for licensing details.
+
+---
+
+**Made with ❤️ for architects and designers**
