@@ -1,4 +1,4 @@
-﻿# Archi3D — AI-Powered Architectural Design Platform
+﻿# ArchiAI — AI-Powered Architectural Design Platform
 
 A full-stack platform for **deterministic bylaw-compliant architectural planning**, **AI-driven layout generation**, **real-time collaboration**, and **professional exports**. Features a modern browser-based UI for designing, visualizing, and exporting architectural layouts with intelligent compliance checking.
 
